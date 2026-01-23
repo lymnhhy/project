@@ -7,7 +7,7 @@ if (isset($_POST['dangky'])) {
     $ho_ten   = $_POST['ho_ten'];
     $email    = $_POST['email'];
     $sdt      = $_POST['so_dien_thoai'];
-    $role_id  = 2; // TỰ ĐỘNG LÀ USER
+    $role_id  = 2; // TỰ ĐỘNG LÀ USER 
 
     $sql = "INSERT INTO users 
     (username, password, hoten, email, sdt, role_id) 

@@ -8,3 +8,4 @@ session_destroy();
 // Quay về trang khách
 header("Location: ../khach.php");
 exit();
+?>

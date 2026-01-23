@@ -1,3 +1,72 @@
+<?php
+session_start();
+include "config/db.php"; // sửa đường dẫn đúng theo cấu trúc của bạn
+
+$error = "";
+$success = "";
+
+/* ================== ĐĂNG KÝ ================== */
+if (isset($_POST['dangky'])) {
+
+    $username = $_POST['username'];
+    $password = md5($_POST['password']);
+    $hoten    = $_POST['fullname'];
+    $email    = $_POST['email'];
+    $sdt      = $_POST['phone'];
+    $role_id  = 2; // mặc định user
+
+    // Check trùng username
+    $check = mysqli_query($conn, "SELECT id FROM users WHERE username='$username'");
+    if (mysqli_num_rows($check) > 0) {
+        $error = "Tên đăng nhập đã tồn tại!";
+    } else {
+        $sql = "INSERT INTO users (username,password,hoten,email,sdt,role_id,trangthai)
+                VALUES ('$username','$password','$hoten','$email','$sdt','$role_id',1)";
+        
+        if (mysqli_query($conn, $sql)) {
+            $success = "Đăng ký thành công! Vui lòng đăng nhập.";
+        } else {
+            $error = "Lỗi đăng ký!";
+        }
+    }
+}
+
+/* ================== ĐĂNG NHẬP ================== */
+if (isset($_POST['dangnhap'])) {
+
+    $username = $_POST['username'];
+    $password = md5($_POST['password']);
+
+    $sql = "SELECT * FROM users 
+            WHERE username='$username' 
+            AND password='$password' 
+            AND trangthai=1";
+
+    $result = mysqli_query($conn, $sql);
+
+    if (mysqli_num_rows($result) == 1) {
+        $row = mysqli_fetch_assoc($result);
+
+        // LƯU SESSION
+        $_SESSION['user'] = $row['username'];
+        $_SESSION['role'] = $row['role_id'];
+        $_SESSION['id']   = $row['id'];
+
+        // PHÂN QUYỀN
+        if ($row['role_id'] == 1) {
+            header("Location: admin/dashboard.php");
+        } else {
+            header("Location: user/dashboard.php");
+        }
+        exit();
+    } else {
+        $error = "Sai tài khoản hoặc mật khẩu!";
+    }
+}
+?>
+
+
+
 <!DOCTYPE html>
 <html lang="en">
 
@@ -27,555 +96,156 @@
         </div>
     </div>
 
-    <!-- Subscribe Modal -->
-    <!-- <div class="subscribe-newsletter-area">
-        <div class="modal fade" id="subsModal" tabindex="-1" role="dialog" aria-labelledby="subsModal" aria-hidden="true">
-            <div class="modal-dialog modal-dialog-centered" role="document">
-                <div class="modal-content">
-                    <button type="button" class="close" data-dismiss="modal" aria-label="Close"><span aria-hidden="true">&times;</span></button>
-                    <div class="modal-body">
-                        <h5 class="title">Subscribe to my newsletter</h5>
-                        <form action="#" class="newsletterForm" method="post">
-                            <input type="email" name="email" id="subscribesForm2" placeholder="Your e-mail here">
-                            <button type="submit" class="btn original-btn">Subscribe</button>
-                        </form>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div> -->
+    <div class="coming-soon-area bg-img background-overlay" style="background-image: url(img/img_jpg/project.jpg);">
+        <!-- ##### Header Area Start ##### -->
+        <header class="header-area">
 
-    <!-- ##### Header Area Start ##### -->
-    <header class="header-area">
-
-        <!-- Top Header Area -->
-        <div class="top-header">
-            <div class="container h-100">
-                <div class="row h-100 align-items-center">
-                    <!-- Breaking News Area -->
-                    <div class="col-12 col-sm-8">
-                        <div class="breaking-news-area">
-                            <div id="breakingNewsTicker" class="ticker">
-                                <ul>
-                                    <li><a href="#">Hello World!</a></li>
-                                    <li><a href="#">Hello Universe!</a></li>
-                                    <li><a href="#">Hello Original!</a></li>
-                                    <li><a href="#">Hello Earth!</a></li>
-                                    <li><a href="#">Hello Colorlib!</a></li>
-                                </ul>
+            <!-- Top Header Area -->
+            <div class="top-header">
+                <div class="container h-100">
+                    <div class="row h-100 align-items-center">
+                        <!-- Breaking News Area -->
+                        <div class="col-12 col-sm-8">
+                            <div class="breaking-news-area">
+                                <div id="breakingNewsTicker" class="ticker">
+                                    <ul>
+                                        <li><a href="#">Hello World!</a></li>
+                                        <li><a href="#">Hello Universe!</a></li>
+                                        <li><a href="#">Hello Original!</a></li>
+                                        <li><a href="#">Hello Earth!</a></li>
+                                        <li><a href="#">Hello Colorlib!</a></li>
+                                    </ul>
+                                </div>
+                            </div>
+                        </div>
+                        <!-- Top Social Area -->
+                        <div class="col-12 col-sm-4">
+                            <div class="top-social-area">
+                                <a href="#" data-toggle="tooltip" data-placement="bottom" title="Pinterest"><i class="fa fa-pinterest" aria-hidden="true"></i></a>
+                                <a href="#" data-toggle="tooltip" data-placement="bottom" title="Facebook"><i class="fa fa-facebook" aria-hidden="true"></i></a>
+                                <a href="#" data-toggle="tooltip" data-placement="bottom" title="Twitter"><i class="fa fa-twitter" aria-hidden="true"></i></a>
+                                <a href="#" data-toggle="tooltip" data-placement="bottom" title="Dribbble"><i class="fa fa-dribbble" aria-hidden="true"></i></a>
+                                <a href="#" data-toggle="tooltip" data-placement="bottom" title="Behance"><i class="fa fa-behance" aria-hidden="true"></i></a>
+                                <a href="#" data-toggle="tooltip" data-placement="bottom" title="Linkedin"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
                             </div>
                         </div>
                     </div>
-                    <!-- Top Social Area -->
-                    <div class="col-12 col-sm-4">
-                        <div class="top-social-area">
-                            <a href="#" data-toggle="tooltip" data-placement="bottom" title="Pinterest"><i class="fa fa-pinterest" aria-hidden="true"></i></a>
-                            <a href="#" data-toggle="tooltip" data-placement="bottom" title="Facebook"><i class="fa fa-facebook" aria-hidden="true"></i></a>
-                            <a href="#" data-toggle="tooltip" data-placement="bottom" title="Twitter"><i class="fa fa-twitter" aria-hidden="true"></i></a>
-                            <a href="#" data-toggle="tooltip" data-placement="bottom" title="Dribbble"><i class="fa fa-dribbble" aria-hidden="true"></i></a>
-                            <a href="#" data-toggle="tooltip" data-placement="bottom" title="Behance"><i class="fa fa-behance" aria-hidden="true"></i></a>
-                            <a href="#" data-toggle="tooltip" data-placement="bottom" title="Linkedin"><i class="fa fa-linkedin" aria-hidden="true"></i></a>
+                </div>
+            </div>
+
+            <!-- Logo Area -->
+            <div class="logo-area text-center">
+                <div class="container h-100">
+                    <div class="row h-100 align-items-center">
+                        <div class="col-12">
+                            <a href="index.html" class="original-logo"><img src="img/core-img/logo2.png" alt=""></a>
                         </div>
                     </div>
                 </div>
             </div>
-        </div>
+        </header>
+        <!-- ##### Header Area End ##### -->
 
-        <!-- Logo Area -->
-        <div class="logo-area text-center">
-            <div class="container h-100">
-                <div class="row h-100 align-items-center">
+        <!-- ##### Coming Soon Area Start ##### -->
+        <div class="coming-soon-timer text-center">
+            <div class="container">
+                <div class="row">
                     <div class="col-12">
-                        <a href="index.html" class="original-logo"><img src="img/core-img/logo.png" alt=""></a>
+                        <div class="coming-soon-content">
+                            <div class="sonar-wrapper">
+                                <div class="sonar-emitter">
+                                    <div class="sonar-wave">
+                                    </div>
+                                </div>
+                            </div>
+                            <p>our website is coming soon</p>
+                        </div>
+                        <div id="clock" class="d-flex align-items-center justify-content-between"></div>
                     </div>
                 </div>
             </div>
         </div>
+        <!-- ##### Coming Soon Area End ##### -->
 
-        <!-- Nav Area -->
-        <div class="original-nav-area" id="stickyNav">
-            <div class="classy-nav-container breakpoint-off">
-                <div class="container">
-                    <!-- Classy Menu -->
-                    <nav class="classy-navbar justify-content-between">
-
-                        <!-- Subscribe btn -->
-                        <div class="subscribe-btn">
-                            <a href="auth/dangky.php" class="btn subscribe-btn" >ĐĂNG KÝ</a>
-                        </div>
-                        <div class="subscribe-btn">
-                            <a href="auth/dangnhap.php" class="btn subscribe-btn" >ĐĂNG NHẬP</a>
-                        </div>
-
-                        <!-- Navbar Toggler -->
-                        <div class="classy-navbar-toggler">
-                            <span class="navbarToggler"><span></span><span></span><span></span></span>
-                        </div>
-
-                        <!-- Menu -->
-                        <div class="classy-menu" id="originalNav">
-                            <!-- close btn -->
-                            <div class="classycloseIcon">
-                                <div class="cross-wrap"><span class="top"></span><span class="bottom"></span></div>
-                            </div>
-
-                            <!-- Nav Start -->
-                            <div class="classynav">
-                                <ul>
-                                    <li><a href="index.html">Home</a></li>
-                                    <li><a href="#">Pages</a>
-                                        <ul class="dropdown">
-                                            <li><a href="index.html">Home</a></li>
-                                            <li><a href="about-us.html">About Us</a></li>
-                                            <li><a href="single-post.html">Single Post</a></li>
-                                            <li><a href="contact.html">Contact</a></li>
-                                            <li><a href="coming-soon.html">Coming Soon</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a href="#">Catagory</a>
-                                        <ul class="dropdown">
-                                            <li><a href="#">Catagory 1</a></li>
-                                            <li><a href="#">Catagory 1</a></li>
-                                            <li><a href="#">Catagory 1</a>
-                                                <ul class="dropdown">
-                                                    <li><a href="#">Catagory 2</a></li>
-                                                    <li><a href="#">Catagory 2</a></li>
-                                                    <li><a href="#">Catagory 2</a>
-                                                        <ul class="dropdown">
-                                                            <li><a href="#">Catagory 3</a></li>
-                                                            <li><a href="#">Catagory 3</a></li>
-                                                            <li><a href="#">Catagory 3</a></li>
-                                                            <li><a href="#">Catagory 3</a></li>
-                                                            <li><a href="#">Catagory 3</a></li>
-                                                        </ul>
-                                                    </li>
-                                                    <li><a href="#">Catagory 2</a></li>
-                                                    <li><a href="#">Catagory 2</a></li>
-                                                </ul>
-                                            </li>
-                                            <li><a href="#">Catagory 1</a></li>
-                                            <li><a href="#">Catagory 1</a></li>
-                                        </ul>
-                                    </li>
-                                    <li><a href="about-us.html">About Us</a></li>
-                                    <li><a href="#">Megamenu</a>
-                                        <div class="megamenu">
-                                            <ul class="single-mega cn-col-4">
-                                                <li class="title">Headline 1</li>
-                                                <li><a href="#">Mega Menu Item 1</a></li>
-                                                <li><a href="#">Mega Menu Item 2</a></li>
-                                                <li><a href="#">Mega Menu Item 3</a></li>
-                                                <li><a href="#">Mega Menu Item 4</a></li>
-                                                <li><a href="#">Mega Menu Item 5</a></li>
-                                            </ul>
-                                            <ul class="single-mega cn-col-4">
-                                                <li class="title">Headline 2</li>
-                                                <li><a href="#">Mega Menu Item 1</a></li>
-                                                <li><a href="#">Mega Menu Item 2</a></li>
-                                                <li><a href="#">Mega Menu Item 3</a></li>
-                                                <li><a href="#">Mega Menu Item 4</a></li>
-                                                <li><a href="#">Mega Menu Item 5</a></li>
-                                            </ul>
-                                            <ul class="single-mega cn-col-4">
-                                                <li class="title">Headline 3</li>
-                                                <li><a href="#">Mega Menu Item 1</a></li>
-                                                <li><a href="#">Mega Menu Item 2</a></li>
-                                                <li><a href="#">Mega Menu Item 3</a></li>
-                                                <li><a href="#">Mega Menu Item 4</a></li>
-                                                <li><a href="#">Mega Menu Item 5</a></li>
-                                            </ul>
-                                            <ul class="single-mega cn-col-4">
-                                                <li class="title">Headline 4</li>
-                                                <li><a href="#">Mega Menu Item 1</a></li>
-                                                <li><a href="#">Mega Menu Item 2</a></li>
-                                                <li><a href="#">Mega Menu Item 3</a></li>
-                                                <li><a href="#">Mega Menu Item 4</a></li>
-                                                <li><a href="#">Mega Menu Item 5</a></li>
-                                            </ul>
+        <!-- ##### Contact Area Start ##### -->
+        <div class="contact-area section-padding-100">
+            <div class="container">
+                <div class="row justify-content-center">
+                    <!-- Contact Form Area -->
+                    <div class="col-12 col-md-10 col-lg-9">
+                        <div class="contact-form">
+                            <h5>ĐĂNG KÝ</h5>
+                            <!-- Contact Form -->
+                            <form action="#" method="post">
+                                <div class="row">
+                                    <div class="col-12 col-md-6">
+                                        <div class="group">
+                                            <input type="text" name="username" id="username" required>
+                                            <span class="highlight"></span>
+                                            <span class="bar"></span>
+                                            <label>Tên đăng nhập</label>
                                         </div>
-                                    </li>
-                                    <li><a href="contact.html">Contact</a></li>
-                                </ul>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="group">
+                                            <input type="password" name="password" id="password" required>
+                                            <span class="highlight"></span>
+                                            <span class="bar"></span>
+                                            <label>Mật khẩu</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="group">
+                                            <input type="text" name="fullname" id="fullname" required>
+                                            <span class="highlight"></span>
+                                            <span class="bar"></span>
+                                            <label>Họ và tên</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12 col-md-6">
+                                        <div class="group">
+                                            <input type="email" name="email" id="email" required>
+                                            <span class="highlight"></span>
+                                            <span class="bar"></span>
+                                            <label>Email</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <div class="group">
+                                            <input type="number" name="phone" id="phone">
+                                            <span class="highlight"></span>
+                                            <span class="bar"></span>
+                                            <label>Số điện thoại</label>
+                                        </div>
+                                    </div>
+                                    <div class="col-12">
+                                        <button type="submit" class="btn original-btn" name="dangky">Đăng ký ngay</button>
+                                    </div>
+                                </div>
+                            </form>
+                        </div>
+                    </div>
 
-                                <!-- Search Form  -->
-                                <div id="search-wrapper">
-                                    <form action="#">
-                                        <input type="text" id="search" placeholder="Search something...">
-                                        <div id="close-icon"></div>
-                                        <input class="d-none" type="submit" value="">
+                    <div class="col-12 col-md-10 col-lg-3">
+                        <div class="post-sidebar-area">
+                            <!-- Widget Area -->
+                            <div class="sidebar-widget-area">
+                                <h5 class="title subscribe-title">Bạn đã có tài khoản?</h5>
+                                <div class="widget-content">
+                                    <form action="#" method="post" class="newsletterForm">
+                                        <input type="text" name="username" placeholder="Tên đăng nhập" autocomplete="new-username">
+                                        <input type="password" name="password" placeholder="Mật khẩu" autocomplete="new-password">
+                                        <button type="submit" class="btn original-btn" name="dangnhap">Đăng nhập</button>
                                     </form>
                                 </div>
                             </div>
-                            <!-- Nav End -->
-                        </div>
-                    </nav>
-                </div>
-            </div>
-        </div>
-    </header>
-    <!-- ##### Header Area End ##### -->
-
-    <!-- ##### Hero Area Start ##### -->
-    <div class="hero-area">
-        <!-- Hero Slides Area -->
-        <div class="hero-slides owl-carousel">
-            <!-- Single Slide -->
-            <div class="single-hero-slide bg-img" style="background-image: url(img/bg-img/b2.jpg);">
-                <div class="container h-100">
-                    <div class="row h-100 align-items-center">
-                        <div class="col-12">
-                            <div class="slide-content text-center">
-                                <div class="post-tag">
-                                    <a href="#" data-animation="fadeInUp">lifestyle</a>
-                                </div>
-                                <h2 data-animation="fadeInUp" data-delay="250ms"><a href="single-post.html">Take a look at last night’s party!</a></h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Single Slide -->
-            <div class="single-hero-slide bg-img" style="background-image: url(img/bg-img/b1.jpg);">
-                <div class="container h-100">
-                    <div class="row h-100 align-items-center">
-                        <div class="col-12">
-                            <div class="slide-content text-center">
-                                <div class="post-tag">
-                                    <a href="#" data-animation="fadeInUp">lifestyle</a>
-                                </div>
-                                <h2 data-animation="fadeInUp" data-delay="250ms"><a href="single-post.html">Take a look at last night’s party!</a></h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Single Slide -->
-            <div class="single-hero-slide bg-img" style="background-image: url(img/bg-img/b3.jpg);">
-                <div class="container h-100">
-                    <div class="row h-100 align-items-center">
-                        <div class="col-12">
-                            <div class="slide-content text-center">
-                                <div class="post-tag">
-                                    <a href="#" data-animation="fadeInUp">lifestyle</a>
-                                </div>
-                                <h2 data-animation="fadeInUp" data-delay="250ms"><a href="single-post.html">Take a look at last night’s party!</a></h2>
-                            </div>
                         </div>
                     </div>
                 </div>
             </div>
         </div>
     </div>
-    <!-- ##### Hero Area End ##### -->
-
-    <!-- ##### Blog Wrapper Start ##### -->
-    <div class="blog-wrapper section-padding-100 clearfix">
-        <div class="container">
-            <div class="row align-items-end">
-                <!-- Single Blog Area -->
-                <div class="col-12 col-lg-4">
-                    <div class="single-blog-area clearfix mb-100">
-                        <!-- Blog Content -->
-                        <div class="single-blog-content">
-                            <div class="line"></div>
-                            <a href="#" class="post-tag">Lifestyle</a>
-                            <h4><a href="#" class="post-headline">Welcome to this Lifestyle blog</a></h4>
-                            <p>Curabitur venenatis efficitur lorem sed tempor. Integer aliquet tempor cursus. Nullam vestibulum convallis risus vel condimentum. Nullam auctor lorem in libero luctus, vel volutpat quam tincidunt. Morbi sodales, dolor id ultricies dictum</p>
-                            <a href="#" class="btn original-btn">Read More</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Single Blog Area -->
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="single-catagory-area clearfix mb-100">
-                        <img src="img/blog-img/1.jpg" alt="">
-                        <!-- Catagory Title -->
-                        <div class="catagory-title">
-                            <a href="#">Lifestyle posts</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Single Blog Area -->
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="single-catagory-area clearfix mb-100">
-                        <img src="img/blog-img/2.jpg" alt="">
-                        <!-- Catagory Title -->
-                        <div class="catagory-title">
-                            <a href="#">latest posts</a>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-
-        <div class="container">
-            <div class="row">
-                <div class="col-12 col-lg-9">
-
-                    <!-- Single Blog Area  -->
-                    <div class="single-blog-area blog-style-2 mb-50 wow fadeInUp" data-wow-delay="0.2s" data-wow-duration="1000ms">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-md-6">
-                                <div class="single-blog-thumbnail">
-                                    <img src="img/blog-img/3.jpg" alt="">
-                                    <div class="post-date">
-                                        <a href="#">12 <span>march</span></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <!-- Blog Content -->
-                                <div class="single-blog-content">
-                                    <div class="line"></div>
-                                    <a href="#" class="post-tag">Lifestyle</a>
-                                    <h4><a href="#" class="post-headline">Party people in the house</a></h4>
-                                    <p>Curabitur venenatis efficitur lorem sed tempor. Integer aliquet tempor cursus. Nullam vestibulum convallis risus vel condimentum. Nullam auctor lorem in libero luctus, vel volutpat quam tincidunt.</p>
-                                    <div class="post-meta">
-                                        <p>By <a href="#">james smith</a></p>
-                                        <p>3 comments</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Single Blog Area  -->
-                    <div class="single-blog-area blog-style-2 mb-50 wow fadeInUp" data-wow-delay="0.3s" data-wow-duration="1000ms">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-md-6">
-                                <div class="single-blog-thumbnail">
-                                    <img src="img/blog-img/4.jpg" alt="">
-                                    <div class="post-date">
-                                        <a href="#">12 <span>march</span></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <!-- Blog Content -->
-                                <div class="single-blog-content">
-                                    <div class="line"></div>
-                                    <a href="#" class="post-tag">Lifestyle</a>
-                                    <h4><a href="#" class="post-headline">We love colors in 2018</a></h4>
-                                    <p>Curabitur venenatis efficitur lorem sed tempor. Integer aliquet tempor cursus. Nullam vestibulum convallis risus vel condimentum. Nullam auctor lorem in libero luctus, vel volutpat quam tincidunt.</p>
-                                    <div class="post-meta">
-                                        <p>By <a href="#">james smith</a></p>
-                                        <p>3 comments</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Single Blog Area  -->
-                    <div class="single-blog-area blog-style-2 mb-50 wow fadeInUp" data-wow-delay="0.4s" data-wow-duration="1000ms">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="single-blog-thumbnail">
-                                    <img src="img/blog-img/7.jpg" alt="">
-                                    <div class="post-date">
-                                        <a href="#">10 <span>march</span></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12">
-                                <!-- Blog Content -->
-                                <div class="single-blog-content mt-50">
-                                    <div class="line"></div>
-                                    <a href="#" class="post-tag">Lifestyle</a>
-                                    <h4><a href="#" class="post-headline">10 Tips to organize the perfect party</a></h4>
-                                    <p>Curabitur venenatis efficitur lorem sed tempor. Integer aliquet tempor cursus. Nullam vestibulum convallis risus vel condimentum. Nullam auctor lorem in libero luctus, vel volutpat quam tincidunt.</p>
-                                    <div class="post-meta">
-                                        <p>By <a href="#">james smith</a></p>
-                                        <p>3 comments</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Single Blog Area  -->
-                    <div class="single-blog-area blog-style-2 mb-50 wow fadeInUp" data-wow-delay="0.5s" data-wow-duration="1000ms">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-md-6">
-                                <div class="single-blog-thumbnail">
-                                    <img src="img/blog-img/5.jpg" alt="">
-                                    <div class="post-date">
-                                        <a href="#">12 <span>march</span></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <!-- Blog Content -->
-                                <div class="single-blog-content">
-                                    <div class="line"></div>
-                                    <a href="#" class="post-tag">Lifestyle</a>
-                                    <h4><a href="#" class="post-headline">Party people in the house</a></h4>
-                                    <p>Curabitur venenatis efficitur lorem sed tempor. Integer aliquet tempor cursus. Nullam vestibulum convallis risus vel condimentum. Nullam auctor lorem in libero luctus, vel volutpat quam tincidunt.</p>
-                                    <div class="post-meta">
-                                        <p>By <a href="#">james smith</a></p>
-                                        <p>3 comments</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Single Blog Area  -->
-                    <div class="single-blog-area blog-style-2 mb-50 wow fadeInUp" data-wow-delay="0.6s" data-wow-duration="1000ms">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-md-6">
-                                <div class="single-blog-thumbnail">
-                                    <img src="img/blog-img/6.jpg" alt="">
-                                    <div class="post-date">
-                                        <a href="#">12 <span>march</span></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <!-- Blog Content -->
-                                <div class="single-blog-content">
-                                    <div class="line"></div>
-                                    <a href="#" class="post-tag">Lifestyle</a>
-                                    <h4><a href="#" class="post-headline">We love colors in 2018</a></h4>
-                                    <p>Curabitur venenatis efficitur lorem sed tempor. Integer aliquet tempor cursus. Nullam vestibulum convallis risus vel condimentum. Nullam auctor lorem in libero luctus, vel volutpat quam tincidunt.</p>
-                                    <div class="post-meta">
-                                        <p>By <a href="#">james smith</a></p>
-                                        <p>3 comments</p>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Load More -->
-                    <div class="load-more-btn mt-100 wow fadeInUp" data-wow-delay="0.7s" data-wow-duration="1000ms">
-                        <a href="#" class="btn original-btn">Read More</a>
-                    </div>
-                </div>
-
-                <!-- ##### Sidebar Area ##### -->
-                <div class="col-12 col-md-4 col-lg-3">
-                    <div class="post-sidebar-area">
-
-                        <!-- Widget Area -->
-                        <div class="sidebar-widget-area">
-                            <form action="#" class="search-form">
-                                <input type="search" name="search" id="searchForm" placeholder="Search">
-                                <input type="submit" value="submit">
-                            </form>
-                        </div>
-
-                        <!-- Widget Area -->
-                        <div class="sidebar-widget-area">
-                            <h5 class="title subscribe-title">Subscribe to my newsletter</h5>
-                            <div class="widget-content">
-                                <form action="#" class="newsletterForm">
-                                    <input type="email" name="email" id="subscribesForm" placeholder="Your e-mail here">
-                                    <button type="submit" class="btn original-btn">Subscribe</button>
-                                </form>
-                            </div>
-                        </div>
-
-                        <!-- Widget Area -->
-                        <div class="sidebar-widget-area">
-                            <h5 class="title">Advertisement</h5>
-                            <a href="#"><img src="img/bg-img/add.gif" alt=""></a>
-                        </div>
-
-                        <!-- Widget Area -->
-                        <div class="sidebar-widget-area">
-                            <h5 class="title">Latest Posts</h5>
-
-                            <div class="widget-content">
-
-                                <!-- Single Blog Post -->
-                                <div class="single-blog-post d-flex align-items-center widget-post">
-                                    <!-- Post Thumbnail -->
-                                    <div class="post-thumbnail">
-                                        <img src="img/blog-img/lp1.jpg" alt="">
-                                    </div>
-                                    <!-- Post Content -->
-                                    <div class="post-content">
-                                        <a href="#" class="post-tag">Lifestyle</a>
-                                        <h4><a href="#" class="post-headline">Party people in the house</a></h4>
-                                        <div class="post-meta">
-                                            <p><a href="#">12 March</a></p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Single Blog Post -->
-                                <div class="single-blog-post d-flex align-items-center widget-post">
-                                    <!-- Post Thumbnail -->
-                                    <div class="post-thumbnail">
-                                        <img src="img/blog-img/lp2.jpg" alt="">
-                                    </div>
-                                    <!-- Post Content -->
-                                    <div class="post-content">
-                                        <a href="#" class="post-tag">Lifestyle</a>
-                                        <h4><a href="#" class="post-headline">A sunday in the park</a></h4>
-                                        <div class="post-meta">
-                                            <p><a href="#">12 March</a></p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Single Blog Post -->
-                                <div class="single-blog-post d-flex align-items-center widget-post">
-                                    <!-- Post Thumbnail -->
-                                    <div class="post-thumbnail">
-                                        <img src="img/blog-img/lp3.jpg" alt="">
-                                    </div>
-                                    <!-- Post Content -->
-                                    <div class="post-content">
-                                        <a href="#" class="post-tag">Lifestyle</a>
-                                        <h4><a href="#" class="post-headline">Party people in the house</a></h4>
-                                        <div class="post-meta">
-                                            <p><a href="#">12 March</a></p>
-                                        </div>
-                                    </div>
-                                </div>
-
-                                <!-- Single Blog Post -->
-                                <div class="single-blog-post d-flex align-items-center widget-post">
-                                    <!-- Post Thumbnail -->
-                                    <div class="post-thumbnail">
-                                        <img src="img/blog-img/lp4.jpg" alt="">
-                                    </div>
-                                    <!-- Post Content -->
-                                    <div class="post-content">
-                                        <a href="#" class="post-tag">Lifestyle</a>
-                                        <h4><a href="#" class="post-headline">A sunday in the park</a></h4>
-                                        <div class="post-meta">
-                                            <p><a href="#">12 March</a></p>
-                                        </div>
-                                    </div>
-                                </div>
-                            </div>
-                        </div>
-
-                        <!-- Widget Area -->
-                        <div class="sidebar-widget-area">
-                            <h5 class="title">Tags</h5>
-                            <div class="widget-content">
-                                <ul class="tags">
-                                    <li><a href="#">design</a></li>
-                                    <li><a href="#">fashion</a></li>
-                                    <li><a href="#">travel</a></li>
-                                    <li><a href="#">music</a></li>
-                                    <li><a href="#">party</a></li>
-                                    <li><a href="#">video</a></li>
-                                    <li><a href="#">photography</a></li>
-                                    <li><a href="#">adventure</a></li>
-                                </ul>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- ##### Blog Wrapper End ##### -->
+    <!-- ##### Contact Area End ##### -->
 
     <!-- ##### Instagram Feed Area Start ##### -->
     <div class="instagram-feed-area">
@@ -659,7 +329,7 @@
                     <!-- Footer Nav Area -->
                     <div class="classy-nav-container breakpoint-off">
                         <!-- Classy Menu -->
-                        <nav class="classy-navbar justify-content-center">
+                        <nav class="classy-navbar justify-content-center" id="footerNav">
 
                             <!-- Navbar Toggler -->
                             <div class="classy-navbar-toggler">
@@ -703,7 +373,7 @@
             </div>
         </div>
 
-   <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
+<!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
 Copyright &copy;<script>document.write(new Date().getFullYear());</script> All rights reserved | This template is made with <i class="fa fa-heart-o" aria-hidden="true"></i> by <a href="https://colorlib.com" target="_blank">Colorlib</a>
 <!-- Link back to Colorlib can't be removed. Template is licensed under CC BY 3.0. -->
 

@@ -2,7 +2,7 @@
 session_start();
 
 if (!isset($_SESSION['user'])) {
-    header("Location: auth/dangnhap.php");
+    header("Location: khach.php");
     exit();
 }
 ?>
