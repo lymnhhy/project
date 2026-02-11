@@ -1,13 +1,21 @@
 <?php
+// trangchu.php - Chuyển hướng sau đăng nhập
 session_start();
+include "config/db.php";
 
 if (!isset($_SESSION['user'])) {
-    header("Location: khach.php");
+    header("Location: guest.php");
     exit();
 }
+
+// Phân quyền chuyển hướng
+if ($_SESSION['role'] == 1) {
+    header("Location: admin/dashboard.php");
+} else {
+    header("Location: user/dashboard.php");
+}
+exit();
 ?>
-
-
 <!DOCTYPE html>
 <html lang="en">
 
@@ -19,10 +27,10 @@ if (!isset($_SESSION['user'])) {
     <!-- The above 4 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
     <!-- Title -->
-    <title>Original - Lifestyle Blog Template</title>
+    <title>ProTrack - Project Progress Tracking System</title>
 
     <!-- Favicon -->
-    <link rel="icon" href="img/core-img/favicon.ico">
+    <link rel="icon" href="img/core-img/favicon1.ico">
 
     <!-- Style CSS -->
     <link rel="stylesheet" href="style.css">
@@ -96,7 +104,7 @@ if (!isset($_SESSION['user'])) {
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-12">
-                        <a href="index.html" class="original-logo"><img src="img/core-img/logo.png" alt=""></a>
+                        <a href="guest.php" class="original-logo"><img src="img/core-img/2.png" alt=""></a>
                     </div>
                 </div>
             </div>
@@ -111,7 +119,7 @@ if (!isset($_SESSION['user'])) {
 
                         <!-- Subscribe btn -->
                         <div class="subscribe-btn">
-                            <a href="auth/dangxuat.php" class="btn subscribe-btn">ĐĂNG XUẤT</a>
+                            <a href="#" class="btn subscribe-btn" data-toggle="modal" data-target="#subsModal">Subscribe</a>
                         </div>
 
                         <!-- Navbar Toggler -->
@@ -257,7 +265,7 @@ if (!isset($_SESSION['user'])) {
                 </div>
             </div>
             <!-- Single Slide -->
-            <div class="single-hero-slide bg-img" style="background-image: url(img/bg-img/b3.jpg);">
+            <div class="single-hero-slide bg-img" style="background-image: url(ddddimg/bg-img/bddd3.jpg);">
                 <div class="container h-100">
                     <div class="row h-100 align-items-center">
                         <div class="col-12">

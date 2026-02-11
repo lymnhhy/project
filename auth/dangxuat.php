@@ -6,6 +6,6 @@ session_unset();
 session_destroy();
 
 // Quay về trang khách
-header("Location: ../khach.php");
+header("Location: ../guest.php");
 exit();
 ?>

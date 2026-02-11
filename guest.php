@@ -78,10 +78,10 @@ if (isset($_POST['dangnhap'])) {
     <!-- The above 4 meta tags *must* come first in the head; any other head content must come *after* these tags -->
 
     <!-- Title -->
-    <title>Original - Lifestyle Blog Template</title>
+    <title>ProTrack - Project Progress Tracking System</title>
 
     <!-- Favicon -->
-    <link rel="icon" href="img/core-img/favicon.ico">
+    <link rel="icon" href="img/core-img/favicon1.ico">
 
     <!-- Style CSS -->
     <link rel="stylesheet" href="style.css">
@@ -138,7 +138,7 @@ if (isset($_POST['dangnhap'])) {
                 <div class="container h-100">
                     <div class="row h-100 align-items-center">
                         <div class="col-12">
-                            <a href="index.html" class="original-logo"><img src="img/core-img/logo2.png" alt=""></a>
+                            <a href="index.html" class="original-logo"><img src="img/core-img/1.png" alt=""></a>
                         </div>
                     </div>
                 </div>
@@ -174,24 +174,24 @@ if (isset($_POST['dangnhap'])) {
                     <!-- Contact Form Area -->
                     <div class="col-12 col-md-10 col-lg-9">
                         <div class="contact-form">
-                            <h5>ĐĂNG KÝ</h5>
+                            <h5>Create an Account</h5>
                             <!-- Contact Form -->
                             <form action="#" method="post">
                                 <div class="row">
                                     <div class="col-12 col-md-6">
                                         <div class="group">
-                                            <input type="text" name="username" id="username" required>
+                                        <input type="text" name="username" id="username" autocomplete="off" required>                                            
                                             <span class="highlight"></span>
                                             <span class="bar"></span>
-                                            <label>Tên đăng nhập</label>
+                                            <label>Username</label>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-6">
                                         <div class="group">
-                                            <input type="password" name="password" id="password" required>
+                                        <input type="password" name="password" id="password" autocomplete="new-password" required>                                            
                                             <span class="highlight"></span>
                                             <span class="bar"></span>
-                                            <label>Mật khẩu</label>
+                                            <label>Password</label>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-6">
@@ -199,7 +199,7 @@ if (isset($_POST['dangnhap'])) {
                                             <input type="text" name="fullname" id="fullname" required>
                                             <span class="highlight"></span>
                                             <span class="bar"></span>
-                                            <label>Họ và tên</label>
+                                            <label>Fullname</label>
                                         </div>
                                     </div>
                                     <div class="col-12 col-md-6">
@@ -212,14 +212,14 @@ if (isset($_POST['dangnhap'])) {
                                     </div>
                                     <div class="col-12">
                                         <div class="group">
-                                            <input type="number" name="phone" id="phone">
+                                            <input type="number" name="phone" id="phone" required>
                                             <span class="highlight"></span>
                                             <span class="bar"></span>
-                                            <label>Số điện thoại</label>
+                                            <label>Phone</label>
                                         </div>
                                     </div>
                                     <div class="col-12">
-                                        <button type="submit" class="btn original-btn" name="dangky">Đăng ký ngay</button>
+                                        <button type="submit" class="btn original-btn" name="dangky">Sign up</button>
                                     </div>
                                 </div>
                             </form>
@@ -230,12 +230,12 @@ if (isset($_POST['dangnhap'])) {
                         <div class="post-sidebar-area">
                             <!-- Widget Area -->
                             <div class="sidebar-widget-area">
-                                <h5 class="title subscribe-title">Bạn đã có tài khoản?</h5>
+                                <h5 class="title subscribe-title">Welcome Back / Sign In to Your Account</h5>
                                 <div class="widget-content">
                                     <form action="#" method="post" class="newsletterForm">
-                                        <input type="text" name="username" placeholder="Tên đăng nhập" autocomplete="new-username">
-                                        <input type="password" name="password" placeholder="Mật khẩu" autocomplete="new-password">
-                                        <button type="submit" class="btn original-btn" name="dangnhap">Đăng nhập</button>
+                                        <input type="text" name="username" placeholder="Username" autocomplete="new-username">
+                                        <input type="password" name="password" placeholder="Password" autocomplete="new-password">
+                                        <button type="submit" class="btn original-btn" name="dangnhap">Sign in</button>
                                     </form>
                                 </div>
                             </div>
