@@ -1,296 +1,455 @@
 <?php
-// user/congtrinh/detail.php
-$page_title = 'Chi tiết công trình';
+// congtrinh/detail.php
 require_once '../includes/header.php';
 
-$user_id = $_SESSION['id'];
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
 // Lấy thông tin công trình
-$sql = "SELECT ct.*, lct.ten_loai, ttct.ten_trang_thai 
+$sql = "SELECT ct.*, lct.ten_loai, ttct.ten_trang_thai, u.hoten, u.email, u.sdt
         FROM congtrinh ct
         LEFT JOIN loaicongtrinh lct ON ct.loaiCT_id = lct.id
         LEFT JOIN trangthaicongtrinh ttct ON ct.trangthaiCT_id = ttct.id
-        WHERE ct.id = '$id' AND ct.user_id = '$user_id'";
+        LEFT JOIN users u ON ct.user_id = u.id
+        WHERE ct.id = $id AND ct.user_id = '{$_SESSION['id']}'";
 $result = mysqli_query($conn, $sql);
 
-if (mysqli_num_rows($result) == 0) {
-    echo "<script>
-        alert('Không tìm thấy công trình!');
-        window.location.href = 'index.php';
-    </script>";
+if(mysqli_num_rows($result) == 0) {
+    $_SESSION['error'] = 'Không tìm thấy công trình';
+    header('Location: index.php');
     exit();
 }
 
 $ct = mysqli_fetch_assoc($result);
 
-// Tính tiến độ
-$sql_tien_do = "SELECT AVG(phan_tram_tien_do) as avg_progress 
-                FROM hangmucthicong 
-                WHERE congtrinh_id = '$id'";
-$result_tien_do = mysqli_query($conn, $sql_tien_do);
-$tien_do = round(mysqli_fetch_assoc($result_tien_do)['avg_progress'] ?? 0);
+// Thống kê hạng mục
+$sql_hm = "SELECT 
+            COUNT(*) as tong,
+            SUM(CASE WHEN trang_thai = 'Hoàn thành' THEN 1 ELSE 0 END) as hoanthanh,
+            SUM(CASE WHEN trang_thai = 'Đang thi công' THEN 1 ELSE 0 END) as dangtc,
+            SUM(CASE WHEN trang_thai = 'Chưa thi công' THEN 1 ELSE 0 END) as chuatc,
+            SUM(CASE WHEN ngay_ket_thuc < CURDATE() AND trang_thai != 'Hoàn thành' THEN 1 ELSE 0 END) as quahan,
+            AVG(phan_tram_tien_do) as tien_do_tb
+            FROM hangmucthicong 
+            WHERE congtrinh_id = $id";
+$result_hm = mysqli_query($conn, $sql_hm);
+$hm_stats = mysqli_fetch_assoc($result_hm);
 
 // Lấy danh sách hạng mục
-$sql_hangmuc = "SELECT * FROM hangmucthicong 
-                WHERE congtrinh_id = '$id' 
-                ORDER BY ngay_bat_dau ASC";
-$result_hangmuc = mysqli_query($conn, $sql_hangmuc);
+$sql_hm_list = "SELECT hm.*, 
+                DATEDIFF(ngay_ket_thuc, CURDATE()) as so_ngay_con
+                FROM hangmucthicong hm
+                WHERE hm.congtrinh_id = $id
+                ORDER BY 
+                    CASE 
+                        WHEN trang_thai != 'Hoàn thành' AND ngay_ket_thuc < CURDATE() THEN 1
+                        WHEN trang_thai = 'Đang thi công' THEN 2
+                        WHEN trang_thai = 'Chưa thi công' THEN 3
+                        ELSE 4
+                    END,
+                    ngay_ket_thuc ASC";
+$hm_list = mysqli_query($conn, $sql_hm_list);
 
-// Lấy ghi chú
-$sql_ghichu = "SELECT gc.*, u.hoten 
+// Lấy ghi chú gần đây
+$sql_ghichu = "SELECT gc.*, u.hoten
                FROM ghichuthicong gc
+               LEFT JOIN hangmucthicong hm ON gc.hangmuc_id = hm.id
                LEFT JOIN users u ON gc.user_id = u.id
-               WHERE gc.congtrinh_id = '$id' 
-               ORDER BY gc.ngay_ghi DESC LIMIT 5";
-$result_ghichu = mysqli_query($conn, $sql_ghichu);
+               WHERE hm.congtrinh_id = $id OR gc.hangmuc_id IS NULL
+               ORDER BY gc.ngay_ghi DESC
+               LIMIT 5";
+$ghichu_list = mysqli_query($conn, $sql_ghichu);
 
-// Format ngày
-function formatDate($date) {
-    return date('d/m/Y', strtotime($date));
-}
+// Tính số ngày còn lại
+$ngay_con = round((strtotime($ct['ngay_ket_thuc']) - time()) / 86400);
+$ngay_da_lam = round((time() - strtotime($ct['ngay_bat_dau'])) / 86400);
+$tong_ngay = round((strtotime($ct['ngay_ket_thuc']) - strtotime($ct['ngay_bat_dau'])) / 86400);
 
-// Màu tiến độ
-function getProgressColor($percent) {
-    if ($percent < 30) return 'danger';
-    if ($percent < 70) return 'warning';
-    if ($percent < 100) return 'info';
-    return 'success';
-}
+// Ghi log
+logActivity($conn, $_SESSION['id'], 'Xem chi tiết', "Xem chi tiết công trình: {$ct['ten_cong_trinh']}");
 ?>
 
-<div class="container-fluid">
-    <!-- Page Title -->
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0">Chi tiết công trình</h4>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="index.php">Công trình</a></li>
-                <li class="breadcrumb-item active">Chi tiết</li>
-            </ol>
-        </nav>
-    </div>
-
-    <!-- Thông tin công trình -->
-    <div class="row">
-        <div class="col-md-8">
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="fas fa-info-circle me-1"></i>
-                        Thông tin công trình
-                    </div>
-                    <div>
-                        <a href="edit.php?id=<?php echo $id; ?>" class="btn btn-sm btn-outline-primary">
-                            <i class="fas fa-edit"></i> Sửa
-                        </a>
-                        <a href="../hangmuc/add.php?congtrinh_id=<?php echo $id; ?>" class="btn btn-sm btn-outline-success">
-                            <i class="fas fa-plus-circle"></i> Thêm hạng mục
-                        </a>
-                    </div>
-                </div>
-                <div class="card-body">
-                    <div class="row">
-                        <div class="col-md-6 mb-3">
-                            <h6 class="text-muted mb-1">Tên công trình</h6>
-                            <h5><?php echo $ct['ten_cong_trinh']; ?></h5>
-                        </div>
-                        <div class="col-md-6 mb-3">
-                            <h6 class="text-muted mb-1">Địa điểm</h6>
-                            <p class="mb-0"><i class="fas fa-map-marker-alt me-2"></i><?php echo $ct['dia_diem']; ?></p>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <h6 class="text-muted mb-1">Ngày bắt đầu</h6>
-                            <p class="mb-0"><i class="fas fa-calendar me-2"></i><?php echo formatDate($ct['ngay_bat_dau']); ?></p>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <h6 class="text-muted mb-1">Ngày kết thúc</h6>
-                            <p class="mb-0"><i class="fas fa-calendar-check me-2"></i><?php echo formatDate($ct['ngay_ket_thuc']); ?></p>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <h6 class="text-muted mb-1">Loại công trình</h6>
-                            <p class="mb-0"><?php echo $ct['ten_loai'] ?? 'Chưa phân loại'; ?></p>
-                        </div>
-                        <div class="col-md-3 mb-3">
-                            <h6 class="text-muted mb-1">Trạng thái</h6>
-                            <span class="badge bg-<?php 
-                                echo $ct['trangthaiCT_id'] == 1 ? 'secondary' : 
-                                    ($ct['trangthaiCT_id'] == 2 ? 'warning' : 'success'); 
-                            ?>">
-                                <?php echo $ct['ten_trang_thai']; ?>
-                            </span>
-                        </div>
-                        <div class="col-12 mb-3">
-                            <h6 class="text-muted mb-1">Tiến độ tổng thể</h6>
-                            <div class="d-flex align-items-center">
-                                <div class="progress flex-grow-1 me-3" style="height: 12px;">
-                                    <div class="progress-bar bg-<?php echo getProgressColor($tien_do); ?>" 
-                                         style="width: <?php echo $tien_do; ?>%"></div>
-                                </div>
-                                <span class="h5 mb-0"><?php echo $tien_do; ?>%</span>
-                            </div>
-                        </div>
-                        <?php if ($ct['mo_ta']): ?>
-                        <div class="col-12">
-                            <h6 class="text-muted mb-1">Mô tả</h6>
-                            <p class="mb-0"><?php echo nl2br($ct['mo_ta']); ?></p>
-                        </div>
-                        <?php endif; ?>
-                    </div>
+<div class="content-wrapper">
+    <!-- Header -->
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h4 class="mb-1">
+                    <i class="fas fa-building me-2 text-warning"></i>
+                    <?php echo htmlspecialchars($ct['ten_cong_trinh']); ?>
+                </h4>
+                <div class="d-flex gap-2">
+                    <span class="badge bg-<?php echo getStatusBadge($ct['ten_trang_thai']); ?>">
+                        <?php echo $ct['ten_trang_thai']; ?>
+                    </span>
+                    <span class="text-muted">
+                        <i class="fas fa-code me-1"></i>Mã: <?php echo $ct['ma_cong_trinh']; ?>
+                    </span>
                 </div>
             </div>
-            
-            <!-- Danh sách hạng mục -->
-            <div class="card mb-4">
-                <div class="card-header d-flex justify-content-between align-items-center">
-                    <div>
-                        <i class="fas fa-tasks me-1"></i>
-                        Hạng mục thi công
-                    </div>
-                    <a href="../hangmuc/add.php?congtrinh_id=<?php echo $id; ?>" class="btn btn-sm btn-primary">
-                        <i class="fas fa-plus-circle"></i> Thêm hạng mục
-                    </a>
+            <div class="mt-2 mt-sm-0">
+                <a href="edit.php?id=<?php echo $id; ?>" class="btn btn-primary">
+                    <i class="fas fa-edit me-2"></i>Sửa
+                </a>
+                <a href="progress.php?id=<?php echo $id; ?>" class="btn btn-info">
+                    <i class="fas fa-chart-line me-2"></i>Tiến độ
+                </a>
+                <a href="../baocao/congtrinh.php?id=<?php echo $id; ?>" class="btn btn-success">
+                    <i class="fas fa-file-pdf me-2"></i>Báo cáo
+                </a>
+                <div class="btn-group">
+                    <button type="button" class="btn btn-secondary dropdown-toggle" data-bs-toggle="dropdown">
+                        <i class="fas fa-tasks me-2"></i>Thêm
+                    </button>
+                    <ul class="dropdown-menu">
+                        <li><a class="dropdown-item" href="../hangmuc/add.php?congtrinh_id=<?php echo $id; ?>">
+                            <i class="fas fa-plus-circle me-2"></i>Hạng mục
+                        </a></li>
+                        <li><a class="dropdown-item" href="../ghichu/add.php?congtrinh_id=<?php echo $id; ?>">
+                            <i class="fas fa-sticky-note me-2"></i>Ghi chú
+                        </a></li>
+                    </ul>
                 </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Thống kê nhanh -->
+    <div class="row g-3 mb-4">
+        <div class="col-md-3">
+            <div class="card stat-card">
                 <div class="card-body">
-                    <div class="table-responsive">
-                        <table class="table table-hover">
-                            <thead>
-                                <tr>
-                                    <th>Tên hạng mục</th>
-                                    <th>Thời gian</th>
-                                    <th>Tiến độ</th>
-                                    <th>Trạng thái</th>
-                                    <th>Thao tác</th>
-                                </tr>
-                            </thead>
-                            <tbody>
-                                <?php if (mysqli_num_rows($result_hangmuc) == 0): ?>
-                                <tr>
-                                    <td colspan="5" class="text-center py-4">
-                                        <p class="text-muted mb-0">Chưa có hạng mục nào</p>
-                                    </td>
-                                </tr>
-                                <?php else: ?>
-                                    <?php while ($hm = mysqli_fetch_assoc($result_hangmuc)): ?>
-                                    <tr>
-                                        <td><?php echo $hm['ten_hang_muc']; ?></td>
-                                        <td>
-                                            <small>
-                                                <?php echo formatDate($hm['ngay_bat_dau']); ?> - 
-                                                <?php echo formatDate($hm['ngay_ket_thuc']); ?>
-                                            </small>
-                                        </td>
-                                        <td style="width: 150px;">
-                                            <div class="d-flex align-items-center">
-                                                <div class="progress flex-grow-1 me-2" style="height: 6px;">
-                                                    <div class="progress-bar bg-<?php echo getProgressColor($hm['phan_tram_tien_do']); ?>" 
-                                                         style="width: <?php echo $hm['phan_tram_tien_do']; ?>%"></div>
-                                                </div>
-                                                <span class="badge bg-<?php echo getProgressColor($hm['phan_tram_tien_do']); ?>">
-                                                    <?php echo $hm['phan_tram_tien_do']; ?>%
-                                                </span>
-                                            </div>
-                                        </td>
-                                        <td>
-                                            <span class="badge bg-<?php 
-                                                echo $hm['trang_thai'] == 'Chưa thi công' ? 'secondary' : 
-                                                    ($hm['trang_thai'] == 'Đang thi công' ? 'warning' : 'success'); 
-                                            ?>">
-                                                <?php echo $hm['trang_thai']; ?>
-                                            </span>
-                                        </td>
-                                        <td>
-                                            <div class="btn-group">
-                                                <a href="../hangmuc/update.php?id=<?php echo $hm['id']; ?>" 
-                                                   class="btn btn-sm btn-outline-success" title="Cập nhật tiến độ">
-                                                    <i class="fas fa-percent"></i>
-                                                </a>
-                                                <a href="../hangmuc/edit.php?id=<?php echo $hm['id']; ?>" 
-                                                   class="btn btn-sm btn-outline-primary" title="Sửa">
-                                                    <i class="fas fa-edit"></i>
-                                                </a>
-                                            </div>
-                                        </td>
-                                    </tr>
-                                    <?php endwhile; ?>
-                                <?php endif; ?>
-                            </tbody>
-                        </table>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-1">Tổng hạng mục</h6>
+                            <h3 class="mb-0"><?php echo $hm_stats['tong'] ?? 0; ?></h3>
+                        </div>
+                        <div class="stat-icon bg-primary">
+                            <i class="fas fa-tasks text-white"></i>
+                        </div>
+                    </div>
+                    <div class="mt-2 small">
+                        <span class="text-success">HT: <?php echo $hm_stats['hoanthanh'] ?? 0; ?></span>
+                        <span class="text-warning ms-2">ĐG: <?php echo $hm_stats['dangtc'] ?? 0; ?></span>
+                        <span class="text-secondary ms-2">CĐ: <?php echo $hm_stats['chuatc'] ?? 0; ?></span>
                     </div>
                 </div>
             </div>
         </div>
-        
-        <!-- Sidebar -->
-        <div class="col-md-4">
-            <!-- Thông tin nhanh -->
-            <div class="card mb-4">
-                <div class="card-header">
-                    <i class="fas fa-chart-simple me-1"></i>
-                    Thông tin nhanh
-                </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
                 <div class="card-body">
-                    <div class="mb-3">
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">Tổng hạng mục:</span>
-                            <strong><?php echo mysqli_num_rows($result_hangmuc); ?></strong>
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-1">Tiến độ TB</h6>
+                            <h3 class="mb-0"><?php echo round($hm_stats['tien_do_tb'] ?? 0); ?>%</h3>
                         </div>
-                        <div class="d-flex justify-content-between mb-1">
-                            <span class="text-muted">Ngày tạo:</span>
-                            <strong><?php echo date('d/m/Y', strtotime($ct['ngay_tao'])); ?></strong>
+                        <div class="stat-icon bg-success">
+                            <i class="fas fa-chart-line text-white"></i>
                         </div>
-                        <div class="d-flex justify-content-between">
-                            <span class="text-muted">Còn lại:</span>
-                            <strong class="text-<?php 
-                                $con_lai = (strtotime($ct['ngay_ket_thuc']) - time()) / (60*60*24);
-                                echo $con_lai <= 7 ? 'danger' : 'success';
-                            ?>">
-                                <?php echo round($con_lai); ?> ngày
-                            </strong>
-                        </div>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <div class="progress-bar bg-success" style="width: <?php echo round($hm_stats['tien_do_tb'] ?? 0); ?>%"></div>
                     </div>
                 </div>
             </div>
-            
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-1">Kinh phí</h6>
+                            <h6 class="mb-0"><?php echo formatMoney($ct['kinh_phi']); ?></h6>
+                        </div>
+                        <div class="stat-icon bg-warning">
+                            <i class="fas fa-coins text-white"></i>
+                        </div>
+                    </div>
+                    <small class="text-muted">Dự kiến</small>
+                </div>
+            </div>
+        </div>
+        <div class="col-md-3">
+            <div class="card stat-card">
+                <div class="card-body">
+                    <div class="d-flex justify-content-between">
+                        <div>
+                            <h6 class="text-muted mb-1">Thời gian</h6>
+                            <h3 class="mb-0 <?php echo $ngay_con < 0 ? 'text-danger' : ''; ?>">
+                                <?php echo $ngay_con < 0 ? 'Quá '.abs($ngay_con).' ngày' : $ngay_con.' ngày'; ?>
+                            </h3>
+                        </div>
+                        <div class="stat-icon bg-<?php echo $ngay_con < 0 ? 'danger' : 'info'; ?>">
+                            <i class="fas fa-clock text-white"></i>
+                        </div>
+                    </div>
+                    <div class="progress mt-2" style="height: 6px;">
+                        <?php 
+                        $percent_time = $tong_ngay > 0 ? round(($ngay_da_lam / $tong_ngay) * 100) : 0;
+                        $percent_time = min(100, $percent_time);
+                        ?>
+                        <div class="progress-bar bg-<?php echo $ngay_con < 0 ? 'danger' : 'info'; ?>" 
+                             style="width: <?php echo $percent_time; ?>%"></div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <div class="row">
+        <!-- Cột trái: Thông tin chi tiết -->
+        <div class="col-lg-4">
+            <!-- Thông tin chung -->
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-info-circle me-2 text-warning"></i>
+                    Thông tin chung
+                </div>
+                <div class="card-body">
+                    <table class="table table-borderless">
+                        <tr>
+                            <th width="120">Địa điểm:</th>
+                            <td>
+                                <i class="fas fa-map-marker-alt text-muted me-2"></i>
+                                <?php echo htmlspecialchars($ct['dia_diem']); ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Loại CT:</th>
+                            <td>
+                                <span class="badge bg-info"><?php echo $ct['ten_loai']; ?></span>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Ngày bắt đầu:</th>
+                            <td>
+                                <i class="far fa-calendar-alt text-muted me-2"></i>
+                                <?php echo date('d/m/Y', strtotime($ct['ngay_bat_dau'])); ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Ngày kết thúc:</th>
+                            <td>
+                                <i class="far fa-calendar-check text-muted me-2"></i>
+                                <?php echo date('d/m/Y', strtotime($ct['ngay_ket_thuc'])); ?>
+                                <?php if($ngay_con < 0): ?>
+                                    <span class="badge bg-danger ms-2">Quá hạn</span>
+                                <?php elseif($ngay_con <= 7): ?>
+                                    <span class="badge bg-warning ms-2">Sắp hết hạn</span>
+                                <?php endif; ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Kinh phí:</th>
+                            <td>
+                                <i class="fas fa-coins text-muted me-2"></i>
+                                <?php echo formatMoney($ct['kinh_phi']); ?>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Người phụ trách:</th>
+                            <td>
+                                <i class="fas fa-user text-muted me-2"></i>
+                                <?php echo htmlspecialchars($ct['hoten']); ?>
+                                <br>
+                                <small class="text-muted ms-4">
+                                    <i class="fas fa-phone"></i> <?php echo $ct['sdt']; ?><br>
+                                    <i class="fas fa-envelope"></i> <?php echo $ct['email']; ?>
+                                </small>
+                            </td>
+                        </tr>
+                        <tr>
+                            <th>Ngày tạo:</th>
+                            <td>
+                                <i class="far fa-clock text-muted me-2"></i>
+                                <?php echo date('d/m/Y H:i', strtotime($ct['ngay_tao'])); ?>
+                            </td>
+                        </tr>
+                    </table>
+                </div>
+            </div>
+
+            <!-- Mô tả -->
+            <?php if(!empty($ct['mo_ta'])): ?>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-file-alt me-2 text-warning"></i>
+                    Mô tả
+                </div>
+                <div class="card-body">
+                    <?php echo nl2br(htmlspecialchars($ct['mo_ta'])); ?>
+                </div>
+            </div>
+            <?php endif; ?>
+
+            <!-- Hình ảnh -->
+            <?php if(!empty($ct['hinh_anh'])): ?>
+            <div class="card mb-4">
+                <div class="card-header">
+                    <i class="fas fa-image me-2 text-warning"></i>
+                    Hình ảnh
+                </div>
+                <div class="card-body text-center">
+                    <img src="../../<?php echo $ct['hinh_anh']; ?>" class="img-fluid rounded" alt="Công trình">
+                </div>
+            </div>
+            <?php endif; ?>
+        </div>
+
+        <!-- Cột phải: Danh sách hạng mục và ghi chú -->
+        <div class="col-lg-8">
+            <!-- Danh sách hạng mục -->
+            <div class="card mb-4">
+                <div class="card-header d-flex justify-content-between align-items-center">
+                    <div>
+                        <i class="fas fa-tasks me-2 text-warning"></i>
+                        Danh sách hạng mục
+                        <span class="badge bg-secondary ms-2"><?php echo $hm_stats['tong'] ?? 0; ?></span>
+                    </div>
+                    <a href="../hangmuc/add.php?congtrinh_id=<?php echo $id; ?>" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus-circle me-2"></i>Thêm hạng mục
+                    </a>
+                </div>
+                <div class="card-body p-0">
+                    <?php if(mysqli_num_rows($hm_list) == 0): ?>
+                    <div class="text-center py-5">
+                        <i class="fas fa-tasks fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Chưa có hạng mục nào</p>
+                        <a href="../hangmuc/add.php?congtrinh_id=<?php echo $id; ?>" class="btn btn-primary btn-sm">
+                            <i class="fas fa-plus-circle me-2"></i>Thêm hạng mục
+                        </a>
+                    </div>
+                    <?php else: ?>
+                    <div class="list-group list-group-flush">
+                        <?php while($hm = mysqli_fetch_assoc($hm_list)): 
+                            $is_overdue = ($hm['trang_thai'] != 'Hoàn thành' && strtotime($hm['ngay_ket_thuc']) < time());
+                        ?>
+                        <div class="list-group-item list-group-item-action">
+                            <div class="d-flex justify-content-between align-items-start">
+                                <div class="flex-grow-1">
+                                    <div class="d-flex justify-content-between">
+                                        <h6 class="mb-1">
+                                            <a href="../hangmuc/detail.php?id=<?php echo $hm['id']; ?>" class="text-decoration-none">
+                                                <?php echo htmlspecialchars($hm['ten_hang_muc']); ?>
+                                            </a>
+                                            <?php if($is_overdue): ?>
+                                                <span class="badge bg-danger ms-2">Quá hạn</span>
+                                            <?php endif; ?>
+                                        </h6>
+                                        <span class="badge bg-<?php echo getProgressColor($hm['phan_tram_tien_do']); ?>">
+                                            <?php echo $hm['phan_tram_tien_do']; ?>%
+                                        </span>
+                                    </div>
+                                    <div class="d-flex gap-3 mb-2 small text-muted">
+                                        <span><i class="fas fa-dollar-sign"></i> <?php echo formatMoney($hm['kinh_phi']); ?></span>
+                                        <span><i class="far fa-calendar-alt"></i> <?php echo date('d/m/Y', strtotime($hm['ngay_ket_thuc'])); ?></span>
+                                    </div>
+                                    <div class="progress" style="height: 6px;">
+                                        <div class="progress-bar bg-<?php echo getProgressColor($hm['phan_tram_tien_do']); ?>" 
+                                             style="width: <?php echo $hm['phan_tram_tien_do']; ?>%"></div>
+                                    </div>
+                                </div>
+                                <div class="ms-3">
+                                    <a href="../hangmuc/update.php?id=<?php echo $hm['id']; ?>" class="btn btn-sm btn-outline-primary" title="Cập nhật">
+                                        <i class="fas fa-pen"></i>
+                                    </a>
+                                </div>
+                            </div>
+                        </div>
+                        <?php endwhile; ?>
+                    </div>
+                    <?php endif; ?>
+                </div>
+                <?php if(mysqli_num_rows($hm_list) > 0): ?>
+                <div class="card-footer text-center">
+                    <a href="../hangmuc/index.php?congtrinh_id=<?php echo $id; ?>" class="text-decoration-none">
+                        Xem tất cả hạng mục <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+                <?php endif; ?>
+            </div>
+
             <!-- Ghi chú gần đây -->
             <div class="card">
                 <div class="card-header d-flex justify-content-between align-items-center">
                     <div>
-                        <i class="fas fa-sticky-note me-1"></i>
+                        <i class="fas fa-sticky-note me-2 text-warning"></i>
                         Ghi chú gần đây
                     </div>
-                    <a href="../ghichu/add.php?congtrinh_id=<?php echo $id; ?>" class="btn btn-sm btn-outline-primary">
-                        <i class="fas fa-plus"></i>
+                    <a href="../ghichu/add.php?congtrinh_id=<?php echo $id; ?>" class="btn btn-sm btn-primary">
+                        <i class="fas fa-plus-circle me-2"></i>Thêm ghi chú
                     </a>
                 </div>
-                <div class="card-body">
-                    <?php if (mysqli_num_rows($result_ghichu) == 0): ?>
-                        <p class="text-muted text-center py-3 mb-0">
-                            <i class="fas fa-comment-slash fa-2x mb-2"></i><br>
-                            Chưa có ghi chú
-                        </p>
+                <div class="card-body p-0">
+                    <?php if(mysqli_num_rows($ghichu_list) == 0): ?>
+                    <div class="text-center py-4">
+                        <i class="fas fa-comment-slash fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Chưa có ghi chú nào</p>
+                    </div>
                     <?php else: ?>
-                        <?php while ($gc = mysqli_fetch_assoc($result_ghichu)): ?>
-                        <div class="mb-3 pb-3 border-bottom">
-                            <div class="d-flex justify-content-between mb-1">
-                                <small class="text-primary fw-bold"><?php echo $gc['hoten']; ?></small>
-                                <small class="text-muted"><?php echo date('d/m/Y', strtotime($gc['ngay_ghi'])); ?></small>
+                    <div class="list-group list-group-flush">
+                        <?php while($gc = mysqli_fetch_assoc($ghichu_list)): ?>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between">
+                                <small class="text-muted">
+                                    <i class="fas fa-user me-1"></i> <?php echo htmlspecialchars($gc['hoten']); ?>
+                                </small>
+                                <small class="text-muted">
+                                    <i class="far fa-clock me-1"></i> <?php echo timeAgo($gc['ngay_ghi']); ?>
+                                </small>
                             </div>
-                            <p class="mb-1"><?php echo $gc['noi_dung']; ?></p>
-                            <?php if ($gc['hinh_anh']): ?>
-                            <img src="../../uploads/ghichu/<?php echo $gc['hinh_anh']; ?>" 
-                                 class="img-fluid rounded" style="max-height: 100px;">
-                            <?php endif; ?>
+                            <p class="mb-2 mt-2"><?php echo htmlspecialchars($gc['noi_dung']); ?></p>
+                            <div class="text-end">
+                                <a href="../ghichu/detail.php?id=<?php echo $gc['id']; ?>" class="btn btn-sm btn-outline-info">
+                                    <i class="fas fa-eye"></i>
+                                </a>
+                            </div>
                         </div>
                         <?php endwhile; ?>
+                    </div>
                     <?php endif; ?>
                 </div>
+                <?php if(mysqli_num_rows($ghichu_list) > 0): ?>
+                <div class="card-footer text-center">
+                    <a href="../ghichu/index.php?congtrinh_id=<?php echo $id; ?>" class="text-decoration-none">
+                        Xem tất cả ghi chú <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
+                </div>
+                <?php endif; ?>
             </div>
         </div>
     </div>
 </div>
 
-<?php
-require_once '../includes/footer.php';
-?>
+<style>
+.stat-card {
+    border: none;
+    border-radius: 12px;
+    box-shadow: 0 2px 4px rgba(0,0,0,0.02);
+    transition: all 0.3s;
+}
+.stat-card:hover {
+    transform: translateY(-5px);
+    box-shadow: 0 10px 25px rgba(0,0,0,0.05);
+}
+.stat-icon {
+    width: 48px;
+    height: 48px;
+    border-radius: 12px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+}
+.table-borderless th {
+    font-weight: 600;
+    color: #64748b;
+}
+.list-group-item {
+    transition: all 0.3s;
+}
+.list-group-item:hover {
+    background: #f8fafc;
+}
+</style>
+
+<?php require_once '../includes/footer.php'; ?>

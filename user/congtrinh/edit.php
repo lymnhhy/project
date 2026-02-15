@@ -1,44 +1,53 @@
 <?php
-// congtrinh/add.php
+// congtrinh/edit.php
 require_once '../includes/header.php';
 
+$id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+
+// Lấy thông tin công trình
+$sql = "SELECT * FROM congtrinh WHERE id = $id AND user_id = '{$_SESSION['id']}'";
+$result = mysqli_query($conn, $sql);
+
+if(mysqli_num_rows($result) == 0) {
+    $_SESSION['error'] = 'Không tìm thấy công trình';
+    header('Location: index.php');
+    exit();
+}
+
+$ct = mysqli_fetch_assoc($result);
 $error = '';
 $success = '';
 
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Lấy dữ liệu từ form
-    $ma_cong_trinh = mysqli_real_escape_string($conn, $_POST['ma_cong_trinh'] ?? 'CT-' . time());
     $ten_cong_trinh = mysqli_real_escape_string($conn, $_POST['ten_cong_trinh']);
     $dia_diem = mysqli_real_escape_string($conn, $_POST['dia_diem']);
     $ngay_bat_dau = $_POST['ngay_bat_dau'];
     $ngay_ket_thuc = $_POST['ngay_ket_thuc'];
     $loaiCT_id = (int)$_POST['loaiCT_id'];
     $trangthaiCT_id = (int)$_POST['trangthaiCT_id'];
-    $phan_tram_tien_do = (int)$_POST['phan_tram_tien_do'];
     $kinh_phi = str_replace(',', '', $_POST['kinh_phi']);
     $mo_ta = mysqli_real_escape_string($conn, $_POST['mo_ta']);
-    $user_id = $_SESSION['id'];
     
     // Validate
     if(empty($ten_cong_trinh)) {
         $error = 'Vui lòng nhập tên công trình';
     } elseif(empty($dia_diem)) {
         $error = 'Vui lòng nhập địa điểm';
-    } elseif(empty($ngay_bat_dau)) {
-        $error = 'Vui lòng chọn ngày bắt đầu';
-    } elseif(empty($ngay_ket_thuc)) {
-        $error = 'Vui lòng chọn ngày kết thúc';
     } elseif(strtotime($ngay_ket_thuc) < strtotime($ngay_bat_dau)) {
         $error = 'Ngày kết thúc phải sau ngày bắt đầu';
-    } elseif($loaiCT_id == 0) {
-        $error = 'Vui lòng chọn loại công trình';
     } else {
-        // Upload hình ảnh
-        $hinh_anh = '';
+        // Xử lý upload hình ảnh mới
+        $hinh_anh = $ct['hinh_anh'];
         if(isset($_FILES['hinh_anh']) && $_FILES['hinh_anh']['size'] > 0) {
             $target_dir = "../../uploads/congtrinh/";
             if(!is_dir($target_dir)) {
                 mkdir($target_dir, 0777, true);
+            }
+            
+            // Xóa hình cũ
+            if(!empty($ct['hinh_anh']) && file_exists("../../" . $ct['hinh_anh'])) {
+                unlink("../../" . $ct['hinh_anh']);
             }
             
             $file_name = time() . '_' . basename($_FILES['hinh_anh']['name']);
@@ -49,20 +58,23 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             }
         }
         
-        // Insert database
-        $sql = "INSERT INTO congtrinh (ma_cong_trinh, ten_cong_trinh, dia_diem, ngay_bat_dau, 
-                ngay_ket_thuc, loaiCT_id, trangthaiCT_id, phan_tram_tien_do, kinh_phi, mo_ta, user_id, hinh_anh) 
-                VALUES ('$ma_cong_trinh', '$ten_cong_trinh', '$dia_diem', '$ngay_bat_dau', 
-                '$ngay_ket_thuc', $loaiCT_id, $trangthaiCT_id, $phan_tram_tien_do, '$kinh_phi', '$mo_ta', $user_id, '$hinh_anh')";
+        // Update database
+        $sql = "UPDATE congtrinh SET 
+                ten_cong_trinh = '$ten_cong_trinh',
+                dia_diem = '$dia_diem',
+                ngay_bat_dau = '$ngay_bat_dau',
+                ngay_ket_thuc = '$ngay_ket_thuc',
+                loaiCT_id = $loaiCT_id,
+                trangthaiCT_id = $trangthaiCT_id,
+                kinh_phi = '$kinh_phi',
+                mo_ta = '$mo_ta',
+                hinh_anh = '$hinh_anh'
+                WHERE id = $id";
         
         if(mysqli_query($conn, $sql)) {
-            $congtrinh_id = mysqli_insert_id($conn);
-            
-            // Ghi log
-            logActivity($conn, $user_id, 'Thêm công trình', "Thêm công trình: $ten_cong_trinh");
-            
-            $_SESSION['success'] = 'Thêm công trình thành công';
-            echo '<script>window.location.href="detail.php?id=' . $congtrinh_id . '";</script>';
+            logActivity($conn, $_SESSION['id'], 'Cập nhật công trình', "Cập nhật: $ten_cong_trinh");
+            $_SESSION['success'] = 'Cập nhật công trình thành công';
+            header('Location: detail.php?id=' . $id);
             exit();
         } else {
             $error = 'Lỗi: ' . mysqli_error($conn);
@@ -72,16 +84,13 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 // Lấy danh sách loại công trình
 $loai = mysqli_query($conn, "SELECT * FROM loaicongtrinh ORDER BY id");
-
-// Tạo mã công trình tự động
-$ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
 ?>
 
 <div class="content-wrapper">
     <div class="page-header">
         <h4 class="mb-0">
-            <i class="fas fa-plus-circle me-2 text-warning"></i>
-            Thêm công trình mới
+            <i class="fas fa-edit me-2 text-warning"></i>
+            Sửa công trình: <?php echo htmlspecialchars($ct['ten_cong_trinh']); ?>
         </h4>
     </div>
 
@@ -101,16 +110,11 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
                     <div class="col-md-6">
                         <label class="form-label">Tên công trình <span class="text-danger">*</span></label>
                         <input type="text" name="ten_cong_trinh" class="form-control" 
-                               value="<?php echo $_POST['ten_cong_trinh'] ?? ''; ?>" required>
+                               value="<?php echo $ct['ten_cong_trinh']; ?>" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Mã công trình</label>
-                        <div class="input-group">
-                            <span class="input-group-text">CT-</span>
-                            <input type="text" name="ma_cong_trinh" class="form-control" 
-                                   value="<?php echo $_POST['ma_cong_trinh'] ?? $ma_ct; ?>">
-                        </div>
-                        <small class="text-muted">Để trống để tự động tạo</small>
+                        <input type="text" class="form-control" value="<?php echo $ct['ma_cong_trinh']; ?>" readonly disabled>
                     </div>
                 </div>
 
@@ -118,7 +122,7 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
                     <div class="col-md-6">
                         <label class="form-label">Địa điểm <span class="text-danger">*</span></label>
                         <input type="text" name="dia_diem" class="form-control" 
-                               value="<?php echo $_POST['dia_diem'] ?? ''; ?>" required>
+                               value="<?php echo $ct['dia_diem']; ?>" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Loại công trình <span class="text-danger">*</span></label>
@@ -126,7 +130,7 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
                             <option value="">-- Chọn loại --</option>
                             <?php while($row = mysqli_fetch_assoc($loai)): ?>
                             <option value="<?php echo $row['id']; ?>" 
-                                <?php echo ($_POST['loaiCT_id'] ?? '') == $row['id'] ? 'selected' : ''; ?>>
+                                <?php echo $ct['loaiCT_id'] == $row['id'] ? 'selected' : ''; ?>>
                                 <?php echo $row['ten_loai']; ?>
                             </option>
                             <?php endwhile; ?>
@@ -140,61 +144,55 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
                     <div class="col-md-4">
                         <label class="form-label">Ngày bắt đầu <span class="text-danger">*</span></label>
                         <input type="date" name="ngay_bat_dau" class="form-control" 
-                               value="<?php echo $_POST['ngay_bat_dau'] ?? date('Y-m-d'); ?>" required>
+                               value="<?php echo $ct['ngay_bat_dau']; ?>" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Ngày kết thúc <span class="text-danger">*</span></label>
                         <input type="date" name="ngay_ket_thuc" class="form-control" 
-                               value="<?php echo $_POST['ngay_ket_thuc'] ?? date('Y-m-d', strtotime('+6 months')); ?>" required>
+                               value="<?php echo $ct['ngay_ket_thuc']; ?>" required>
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Kinh phí dự kiến (VNĐ)</label>
                         <input type="text" name="kinh_phi" class="form-control money-format" 
-                               value="<?php echo $_POST['kinh_phi'] ?? ''; ?>" 
-                               placeholder="1.000.000.000">
+                               value="<?php echo number_format($ct['kinh_phi'], 0, ',', '.'); ?>">
                     </div>
                 </div>
 
-                <div class="row mb-3">
-                    <div class="col-md-6">
-                        <label class="form-label">Trạng thái ban đầu</label>
-                        <select name="trangthaiCT_id" class="form-select">
-                            <option value="1" selected>Chưa thi công</option>
-                            <option value="2">Đang thi công</option>
-                            <option value="3">Hoàn thành</option>
-                        </select>
-                    </div>
-                    <div class="col-md-6">
-                        <label class="form-label">Tiến độ ban đầu (%)</label>
-                        <div class="d-flex align-items-center gap-3">
-                            <input type="range" name="phan_tram_tien_do" class="form-range" 
-                                   min="0" max="100" value="0" onchange="updateRange(this.value)">
-                            <span class="badge bg-primary" id="rangeValue" style="min-width: 50px;">0%</span>
-                        </div>
-                    </div>
+                <div class="mb-3">
+                    <label class="form-label">Trạng thái</label>
+                    <select name="trangthaiCT_id" class="form-select">
+                        <option value="1" <?php echo $ct['trangthaiCT_id'] == 1 ? 'selected' : ''; ?>>Chưa thi công</option>
+                        <option value="2" <?php echo $ct['trangthaiCT_id'] == 2 ? 'selected' : ''; ?>>Đang thi công</option>
+                        <option value="3" <?php echo $ct['trangthaiCT_id'] == 3 ? 'selected' : ''; ?>>Hoàn thành</option>
+                    </select>
                 </div>
 
                 <!-- Mô tả -->
                 <h5 class="mb-3 mt-4">Mô tả chi tiết</h5>
                 <div class="mb-3">
-                    <textarea name="mo_ta" class="form-control" rows="5" 
-                              placeholder="Nhập mô tả chi tiết về công trình..."><?php echo $_POST['mo_ta'] ?? ''; ?></textarea>
+                    <textarea name="mo_ta" class="form-control" rows="5"><?php echo $ct['mo_ta']; ?></textarea>
                 </div>
 
                 <!-- Hình ảnh -->
                 <h5 class="mb-3 mt-4">Hình ảnh công trình</h5>
                 <div class="mb-3">
+                    <?php if(!empty($ct['hinh_anh'])): ?>
+                    <div class="mb-2">
+                        <img src="../../<?php echo $ct['hinh_anh']; ?>" class="img-thumbnail" style="max-height: 150px;">
+                        <p class="text-muted small mt-1">Hình ảnh hiện tại</p>
+                    </div>
+                    <?php endif; ?>
                     <input type="file" name="hinh_anh" class="form-control" accept="image/*" onchange="previewImage(this)">
-                    <small class="text-muted">Chấp nhận: JPG, PNG, GIF. Tối đa 5MB</small>
+                    <small class="text-muted">Chọn hình mới để thay thế</small>
                 </div>
                 <div id="imagePreview" class="mb-3"></div>
 
                 <!-- Buttons -->
                 <div class="text-center mt-4">
-                    <button type="submit" name="submit" class="btn btn-primary px-5">
-                        <i class="fas fa-save me-2"></i>Lưu công trình
+                    <button type="submit" class="btn btn-primary px-5">
+                        <i class="fas fa-save me-2"></i>Cập nhật
                     </button>
-                    <a href="index.php" class="btn btn-secondary px-5">
+                    <a href="detail.php?id=<?php echo $id; ?>" class="btn btn-secondary px-5">
                         <i class="fas fa-times me-2"></i>Hủy
                     </a>
                 </div>
@@ -204,7 +202,6 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
 </div>
 
 <script>
-// Preview image
 function previewImage(input) {
     const preview = document.getElementById('imagePreview');
     preview.innerHTML = '';
@@ -215,16 +212,12 @@ function previewImage(input) {
             preview.innerHTML = `
                 <div class="image-preview">
                     <img src="${e.target.result}" class="img-thumbnail" style="max-height: 200px;">
+                    <p class="text-muted small mt-1">Hình ảnh mới</p>
                 </div>
             `;
         }
         reader.readAsDataURL(input.files[0]);
     }
-}
-
-// Update range value
-function updateRange(value) {
-    document.getElementById('rangeValue').textContent = value + '%';
 }
 
 // Format money
@@ -247,18 +240,5 @@ function validateForm() {
     return true;
 }
 </script>
-
-<style>
-.image-preview {
-    text-align: center;
-    padding: 10px;
-    border: 2px dashed #dee2e6;
-    border-radius: 8px;
-}
-.image-preview img {
-    max-width: 100%;
-    border-radius: 8px;
-}
-</style>
 
 <?php require_once '../includes/footer.php'; ?>
