@@ -15,7 +15,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     $loaiCT_id = (int)$_POST['loaiCT_id'];
     $trangthaiCT_id = (int)$_POST['trangthaiCT_id'];
     $phan_tram_tien_do = (int)$_POST['phan_tram_tien_do'];
-    $kinh_phi = str_replace(',', '', $_POST['kinh_phi']);
+    
+    // XỬ LÝ KINH PHÍ - BỎ DẤU CHẤM TRƯỚC KHI LƯU
+    $kinh_phi_raw = $_POST['kinh_phi'] ?? '';
+    // Loại bỏ dấu chấm (chỉ giữ lại số)
+    $kinh_phi = str_replace('.', '', $kinh_phi_raw);
+    // Nếu không có số, gán 0
+    $kinh_phi = $kinh_phi !== '' ? (float)$kinh_phi : 0;
+    
     $mo_ta = mysqli_real_escape_string($conn, $_POST['mo_ta']);
     $user_id = $_SESSION['id'];
     
@@ -59,7 +66,9 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             $congtrinh_id = mysqli_insert_id($conn);
             
             // Ghi log
-            logActivity($conn, $user_id, 'Thêm công trình', "Thêm công trình: $ten_cong_trinh");
+            if(function_exists('logActivity')) {
+                logActivity($conn, $user_id, 'Thêm công trình', "Thêm công trình: $ten_cong_trinh");
+            }
             
             $_SESSION['success'] = 'Thêm công trình thành công';
             echo '<script>window.location.href="detail.php?id=' . $congtrinh_id . '";</script>';
@@ -94,21 +103,21 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
 
     <div class="card">
         <div class="card-body">
-            <form method="POST" enctype="multipart/form-data" onsubmit="return validateForm()">
+            <form method="POST" enctype="multipart/form-data" id="addForm">
                 <!-- Thông tin cơ bản -->
                 <h5 class="mb-3">Thông tin cơ bản</h5>
                 <div class="row mb-3">
                     <div class="col-md-6">
                         <label class="form-label">Tên công trình <span class="text-danger">*</span></label>
                         <input type="text" name="ten_cong_trinh" class="form-control" 
-                               value="<?php echo $_POST['ten_cong_trinh'] ?? ''; ?>" required>
+                               value="<?php echo htmlspecialchars($_POST['ten_cong_trinh'] ?? ''); ?>" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Mã công trình</label>
                         <div class="input-group">
                             <span class="input-group-text">CT-</span>
                             <input type="text" name="ma_cong_trinh" class="form-control" 
-                                   value="<?php echo $_POST['ma_cong_trinh'] ?? $ma_ct; ?>">
+                                   value="<?php echo htmlspecialchars($_POST['ma_cong_trinh'] ?? $ma_ct); ?>">
                         </div>
                         <small class="text-muted">Để trống để tự động tạo</small>
                     </div>
@@ -118,7 +127,7 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
                     <div class="col-md-6">
                         <label class="form-label">Địa điểm <span class="text-danger">*</span></label>
                         <input type="text" name="dia_diem" class="form-control" 
-                               value="<?php echo $_POST['dia_diem'] ?? ''; ?>" required>
+                               value="<?php echo htmlspecialchars($_POST['dia_diem'] ?? ''); ?>" required>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Loại công trình <span class="text-danger">*</span></label>
@@ -127,7 +136,7 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
                             <?php while($row = mysqli_fetch_assoc($loai)): ?>
                             <option value="<?php echo $row['id']; ?>" 
                                 <?php echo ($_POST['loaiCT_id'] ?? '') == $row['id'] ? 'selected' : ''; ?>>
-                                <?php echo $row['ten_loai']; ?>
+                                <?php echo htmlspecialchars($row['ten_loai']); ?>
                             </option>
                             <?php endwhile; ?>
                         </select>
@@ -149,9 +158,10 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
                     </div>
                     <div class="col-md-4">
                         <label class="form-label">Kinh phí dự kiến (VNĐ)</label>
-                        <input type="text" name="kinh_phi" class="form-control money-format" 
-                               value="<?php echo $_POST['kinh_phi'] ?? ''; ?>" 
-                               placeholder="1.000.000.000">
+                        <input type="text" name="kinh_phi" id="kinhPhi" class="form-control text-end" 
+                               value="<?php echo isset($_POST['kinh_phi']) ? number_format((float)$_POST['kinh_phi'], 0, ',', '.') : ''; ?>" 
+                               placeholder="0">
+                        <small class="text-muted">Tự động thêm dấu chấm phân cách</small>
                     </div>
                 </div>
 
@@ -159,17 +169,20 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
                     <div class="col-md-6">
                         <label class="form-label">Trạng thái ban đầu</label>
                         <select name="trangthaiCT_id" class="form-select">
-                            <option value="1" selected>Chưa thi công</option>
-                            <option value="2">Đang thi công</option>
-                            <option value="3">Hoàn thành</option>
+                            <option value="1" <?php echo ($_POST['trangthaiCT_id'] ?? '1') == '1' ? 'selected' : ''; ?>>Chưa thi công</option>
+                            <option value="2" <?php echo ($_POST['trangthaiCT_id'] ?? '') == '2' ? 'selected' : ''; ?>>Đang thi công</option>
+                            <option value="3" <?php echo ($_POST['trangthaiCT_id'] ?? '') == '3' ? 'selected' : ''; ?>>Hoàn thành</option>
                         </select>
                     </div>
                     <div class="col-md-6">
                         <label class="form-label">Tiến độ ban đầu (%)</label>
                         <div class="d-flex align-items-center gap-3">
                             <input type="range" name="phan_tram_tien_do" class="form-range" 
-                                   min="0" max="100" value="0" onchange="updateRange(this.value)">
-                            <span class="badge bg-primary" id="rangeValue" style="min-width: 50px;">0%</span>
+                                   min="0" max="100" value="<?php echo $_POST['phan_tram_tien_do'] ?? 0; ?>" 
+                                   onchange="updateRange(this.value)">
+                            <span class="badge bg-primary" id="rangeValue" style="min-width: 50px;">
+                                <?php echo $_POST['phan_tram_tien_do'] ?? 0; ?>%
+                            </span>
                         </div>
                     </div>
                 </div>
@@ -178,7 +191,7 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
                 <h5 class="mb-3 mt-4">Mô tả chi tiết</h5>
                 <div class="mb-3">
                     <textarea name="mo_ta" class="form-control" rows="5" 
-                              placeholder="Nhập mô tả chi tiết về công trình..."><?php echo $_POST['mo_ta'] ?? ''; ?></textarea>
+                              placeholder="Nhập mô tả chi tiết về công trình..."><?php echo htmlspecialchars($_POST['mo_ta'] ?? ''); ?></textarea>
                 </div>
 
                 <!-- Hình ảnh -->
@@ -204,6 +217,62 @@ $ma_ct = 'CT-' . date('Ymd') . '-' . rand(100, 999);
 </div>
 
 <script>
+// Hàm format số thành dạng có dấu chấm (VD: 120000 -> 120.000)
+function formatMoney(amount) {
+    return amount.toString().replace(/\B(?=(\d{3})+(?!\d))/g, ".");
+}
+
+// Hàm loại bỏ dấu chấm để lấy số nguyên
+function unformatMoney(str) {
+    return str.replace(/\./g, '');
+}
+
+// Xử lý input kinh phí
+const kinhPhiInput = document.getElementById('kinhPhi');
+if (kinhPhiInput) {
+    // Khi người dùng nhập
+    kinhPhiInput.addEventListener('input', function(e) {
+        // Chỉ cho phép nhập số
+        let value = this.value.replace(/[^0-9]/g, '');
+        if (value) {
+            // Format và hiển thị
+            this.value = formatMoney(value);
+        } else {
+            this.value = '';
+        }
+    });
+
+    // Khi rời khỏi ô input
+    kinhPhiInput.addEventListener('blur', function(e) {
+        let value = this.value.replace(/[^0-9]/g, '');
+        if (value) {
+            this.value = formatMoney(value);
+        }
+    });
+}
+
+// Xử lý khi submit form
+document.getElementById('addForm').addEventListener('submit', function(e) {
+    // Xử lý kinh phí - loại bỏ dấu chấm trước khi gửi đi
+    const kinhPhi = document.getElementById('kinhPhi');
+    if (kinhPhi) {
+        let rawValue = unformatMoney(kinhPhi.value);
+        kinhPhi.value = rawValue;
+    }
+    
+    // Validate ngày tháng
+    const startDate = new Date(document.querySelector('input[name="ngay_bat_dau"]').value);
+    const endDate = new Date(document.querySelector('input[name="ngay_ket_thuc"]').value);
+    
+    if (endDate < startDate) {
+        alert('Ngày kết thúc phải sau ngày bắt đầu!');
+        e.preventDefault();
+        return false;
+    }
+    
+    return true;
+});
+
 // Preview image
 function previewImage(input) {
     const preview = document.getElementById('imagePreview');
@@ -225,26 +294,23 @@ function previewImage(input) {
 // Update range value
 function updateRange(value) {
     document.getElementById('rangeValue').textContent = value + '%';
+    
+    // Đổi màu badge
+    const badge = document.getElementById('rangeValue');
+    badge.className = 'badge ';
+    if(value == 0) {
+        badge.classList.add('bg-secondary');
+    } else if(value == 100) {
+        badge.classList.add('bg-success');
+    } else {
+        badge.classList.add('bg-warning');
+    }
 }
 
-// Format money
-document.querySelector('.money-format')?.addEventListener('input', function(e) {
-    let value = this.value.replace(/\D/g, '');
-    if(value) {
-        this.value = new Intl.NumberFormat('vi-VN').format(value);
-    }
-});
-
-// Validate form
-function validateForm() {
-    const startDate = new Date(document.querySelector('input[name="ngay_bat_dau"]').value);
-    const endDate = new Date(document.querySelector('input[name="ngay_ket_thuc"]').value);
-    
-    if(endDate < startDate) {
-        alert('Ngày kết thúc phải sau ngày bắt đầu!');
-        return false;
-    }
-    return true;
+// Khởi tạo
+window.onload = function() {
+    const rangeValue = document.querySelector('input[name="phan_tram_tien_do"]').value;
+    updateRange(rangeValue);
 }
 </script>
 
@@ -258,6 +324,16 @@ function validateForm() {
 .image-preview img {
     max-width: 100%;
     border-radius: 8px;
+}
+.form-label {
+    font-weight: 600;
+    color: #2c3e50;
+}
+.input-group-text {
+    background-color: #e9ecef;
+}
+.text-end {
+    text-align: right;
 }
 </style>
 

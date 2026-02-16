@@ -1179,12 +1179,20 @@ if ($tong_canh_bao > 0):
 <!-- ============================================ -->
 <!-- SCRIPT CHO BIỂU ĐỒ -->
 <!-- ============================================ -->
+<!-- ============================================ -->
+<!-- SCRIPT CHO BIỂU ĐỒ - ĐÃ SỬA LỖI -->
+<!-- ============================================ -->
 <?php if (!empty($labels)): ?>
 <script>
 let progressChart;
 
 function initChart(type) {
     const ctx = document.getElementById('progressChart').getContext('2d');
+    
+    // Set kích thước cố định cho canvas
+    const canvas = document.getElementById('progressChart');
+    canvas.style.height = '280px';
+    canvas.style.width = '100%';
     
     if (progressChart) {
         progressChart.destroy();
@@ -1210,7 +1218,8 @@ function initChart(type) {
             tension: 0.3,
             fill: type === 'line' ? false : true,
             borderRadius: 8,
-            barPercentage: 0.6
+            barPercentage: 0.6,
+            categoryPercentage: 0.8
         }]
     };
     
@@ -1232,10 +1241,12 @@ function initChart(type) {
         data: chartData,
         options: {
             responsive: true,
-            maintainAspectRatio: false,
+            maintainAspectRatio: true, // Đổi thành true
+            aspectRatio: 2, // Thêm tỷ lệ khung hình
             plugins: {
                 legend: {
-                    display: type === 'line'
+                    display: type === 'line',
+                    position: 'top',
                 },
                 tooltip: {
                     callbacks: {
@@ -1256,12 +1267,17 @@ function initChart(type) {
                     ticks: {
                         callback: function(value) {
                             return value + '%';
-                        }
+                        },
+                        stepSize: 20
                     }
                 },
                 x: {
                     grid: {
                         display: false
+                    },
+                    ticks: {
+                        maxRotation: 45,
+                        minRotation: 45
                     }
                 }
             }
@@ -1271,16 +1287,31 @@ function initChart(type) {
 
 function changeChartType(type) {
     initChart(type);
-    $('.btn-group .btn').removeClass('active');
-    $(`.btn-group .btn:contains('${type === 'bar' ? 'bar' : 'line'}')`).addClass('active');
+    
+    // Thay thế jQuery bằng JavaScript thuần
+    const buttons = document.querySelectorAll('.btn-group .btn');
+    buttons.forEach(btn => btn.classList.remove('active'));
+    
+    // Tìm button có nội dung phù hợp
+    buttons.forEach(btn => {
+        if (btn.textContent.includes(type === 'bar' ? 'bar' : 'line')) {
+            btn.classList.add('active');
+        }
+    });
 }
 
-$(document).ready(function() {
+// Khởi tạo khi trang load xong
+document.addEventListener('DOMContentLoaded', function() {
     initChart('bar');
 });
 
 <?php if (array_sum($status_data) > 0): ?>
+// Biểu đồ tròn
 const ctx2 = document.getElementById('statusChart').getContext('2d');
+const statusCanvas = document.getElementById('statusChart');
+statusCanvas.style.height = '180px';
+statusCanvas.style.width = '100%';
+
 new Chart(ctx2, {
     type: 'doughnut',
     data: {
@@ -1294,7 +1325,8 @@ new Chart(ctx2, {
     },
     options: {
         responsive: true,
-        maintainAspectRatio: false,
+        maintainAspectRatio: true,
+        aspectRatio: 1.5,
         cutout: '65%',
         plugins: {
             legend: {

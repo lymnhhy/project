@@ -307,8 +307,21 @@ mysqli_data_seek($hm_list, 0);
                             <td>
                                 <small class="text-muted">
                                     <i class="far fa-clock me-1"></i>
-                                    <?php echo $last_update ? timeAgo($last_update['thoi_gian_cap_nhat']) : 'Chưa cập nhật'; ?>
-                                </small>
+<?php 
+if($last_update) {
+    $time = strtotime($last_update['thoi_gian_cap_nhat']);
+    $now = time();
+    $diff = $now - $time;
+    
+    if($diff < 60) echo 'Vài giây trước';
+    elseif($diff < 3600) echo floor($diff/60) . ' phút trước';
+    elseif($diff < 86400) echo floor($diff/3600) . ' giờ trước';
+    elseif($diff < 2592000) echo floor($diff/86400) . ' ngày trước';
+    else echo date('d/m/Y', $time);
+} else {
+    echo 'Chưa cập nhật';
+}
+?>                                </small>
                             </td>
                             <td>
                                 <small class="text-muted"><?php echo formatMoney($hm['kinh_phi']); ?></small>

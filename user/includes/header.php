@@ -148,6 +148,52 @@ function logActivity($conn, $user_id, $action, $detail) {
     @mysqli_query($conn, $sql);
 }
 $so_thong_bao = countThongBaoChuaDoc($conn, $user_id);
+// Thêm vào includes/header.php
+function timeAgo($time) {
+    if(empty($time)) return 'Không xác định';
+    
+    $time = strtotime($time);
+    $now = time();
+    $diff = $now - $time;
+    
+    if($diff < 60) {
+        return 'Vài giây trước';
+    } elseif($diff < 3600) {
+        $mins = floor($diff / 60);
+        return $mins . ' phút trước';
+    } elseif($diff < 86400) {
+        $hours = floor($diff / 3600);
+        return $hours . ' giờ trước';
+    } elseif($diff < 2592000) {
+        $days = floor($diff / 86400);
+        return $days . ' ngày trước';
+    } elseif($diff < 31536000) {
+        $months = floor($diff / 2592000);
+        return $months . ' tháng trước';
+    } else {
+        return date('d/m/Y', $time);
+    }
+}
+// Thêm vào includes/header.php
+
+function getTrangThaiByID($id) {
+    switch($id) {
+        case 1: return 'Chưa thi công';
+        case 2: return 'Đang thi công';
+        case 3: return 'Hoàn thành';
+        default: return 'Không xác định';
+    }
+}
+
+function getStatusBadgeByID($id) {
+    switch($id) {
+        case 1: return 'secondary';
+        case 2: return 'warning';
+        case 3: return 'success';
+        default: return 'secondary';
+    }
+}
+
 ?>
 <!DOCTYPE html>
 <html lang="vi">
@@ -178,7 +224,13 @@ $so_thong_bao = countThongBaoChuaDoc($conn, $user_id);
     <!-- Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-    
+    <!-- jQuery trước -->
+<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+
+<!-- Bootstrap sau jQuery -->
+<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+
+<!-- Các script khác -->
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     

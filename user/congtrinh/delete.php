@@ -1,6 +1,13 @@
 <?php
-// congtrinh/delete.php
-require_once '../includes/header.php';
+// congtrinh/delete.php - ĐÃ SỬA
+session_start(); // Thêm dòng này
+require_once '../../config/db.php'; // Sửa đường dẫn, KHÔNG include header
+
+// Kiểm tra đăng nhập
+if (!isset($_SESSION['user']) || !isset($_SESSION['id'])) {
+    header('Location: ../../auth/dangnhap.php');
+    exit();
+}
 
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
 
@@ -35,7 +42,13 @@ if(!empty($hinh_anh) && file_exists("../../" . $hinh_anh)) {
 // Xóa công trình
 $sql = "DELETE FROM congtrinh WHERE id = $id";
 if(mysqli_query($conn, $sql)) {
-    logActivity($conn, $_SESSION['id'], 'Xóa công trình', "Xóa công trình: {$ct['ten_cong_trinh']}");
+    // Tự viết hàm log hoặc dùng hàm có sẵn
+    $ip = $_SERVER['REMOTE_ADDR'];
+    $thoi_gian = date('Y-m-d H:i:s');
+    $log_sql = "INSERT INTO lichsuhoatdong (user_id, hanh_dong, chi_tiet, ip_address, thoi_gian) 
+                VALUES ('{$_SESSION['id']}', 'Xóa công trình', 'Đã xóa: {$ct['ten_cong_trinh']}', '$ip', '$thoi_gian')";
+    mysqli_query($conn, $log_sql);
+    
     $_SESSION['success'] = 'Xóa công trình thành công';
 } else {
     $_SESSION['error'] = 'Lỗi: ' . mysqli_error($conn);

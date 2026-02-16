@@ -77,13 +77,14 @@ $sql = "SELECT ct.*, lct.ten_loai, ttct.ten_trang_thai, u.hoten,
         LIMIT $offset, $limit";
 $result = mysqli_query($conn, $sql);
 
-// Thống kê nhanh
+// Thống kê nhanh - ĐÃ SỬA
 $sql_thongke = "SELECT 
                 COUNT(*) as tong,
                 SUM(CASE WHEN trangthaiCT_id = 2 THEN 1 ELSE 0 END) as dangtc,
                 SUM(CASE WHEN trangthaiCT_id = 3 THEN 1 ELSE 0 END) as hoanthanh,
                 SUM(CASE WHEN trangthaiCT_id = 1 THEN 1 ELSE 0 END) as chuatc,
-                SUM(CASE WHEN ngay_ket_thuc < CURDATE() AND trangthaiCT_id != 3 THEN 1 ELSE 0 END) as quahan
+                SUM(CASE WHEN ngay_ket_thuc < CURDATE() AND trangthaiCT_id != 3 THEN 1 ELSE 0 END) as quahan,
+                SUM(kinh_phi) as tong_kinhphi
                 FROM congtrinh 
                 WHERE user_id = '$user_id'";
 $result_thongke = mysqli_query($conn, $sql_thongke);
@@ -166,17 +167,18 @@ $thongke = mysqli_fetch_assoc($result_thongke);
                 </div>
             </div>
         </div>
-        <div class="col-md-2 col-6">
-            <div class="stat-card bg-secondary text-white">
-                <div class="d-flex justify-content-between align-items-center">
-                    <div>
-                        <h6 class="mb-1">Tổng kinh phí</h6>
-                        <h6 class="mb-0"><?php echo formatMoney($tong_kinhphi ?? 0); ?></h6>
-                    </div>
-                    <i class="fas fa-coins fa-2x opacity-50"></i>
-                </div>
+        <!-- Thống kê nhanh - Card tổng kinh phí (dòng ~86) -->
+<div class="col-md-2 col-6">
+    <div class="stat-card bg-secondary text-white">
+        <div class="d-flex justify-content-between align-items-center">
+            <div>
+                <h6 class="mb-1">Tổng kinh phí</h6>
+                <h6 class="mb-0"><?php echo formatMoney($thongke['tong_kinhphi'] ?? 0); ?></h6>
             </div>
+            <i class="fas fa-coins fa-2x opacity-50"></i>
         </div>
+    </div>
+</div>
     </div>
 
     <!-- Bộ lọc -->
@@ -356,10 +358,13 @@ $thongke = mysqli_fetch_assoc($result_thongke);
                                            class="btn btn-sm btn-outline-success" title="Tiến độ">
                                             <i class="fas fa-chart-line"></i>
                                         </a>
-                                        <button onclick="confirmDelete(<?php echo $ct['id']; ?>)" 
-                                                class="btn btn-sm btn-outline-danger" title="Xóa">
-                                            <i class="fas fa-trash"></i>
-                                        </button>
+<button type="button" 
+        onclick="confirmDelete(<?php echo $ct['id']; ?>, '<?php echo addslashes($ct['ten_cong_trinh']); ?>'); return false;"
+        class="btn btn-sm btn-outline-danger" 
+        title="Xóa">
+    <i class="fas fa-trash"></i>
+</button>
+                                        
                                     </div>
                                 </td>
                             </tr>
@@ -405,11 +410,26 @@ document.getElementById('selectAll').addEventListener('change', function(e) {
     document.querySelectorAll('input[name="ids[]"]').forEach(cb => cb.checked = e.target.checked);
 });
 
-// Confirm delete
-function confirmDelete(id) {
-    if(confirm('Bạn có chắc muốn xóa công trình này? Tất cả hạng mục và ghi chú liên quan sẽ bị xóa!')) {
-        window.location.href = 'delete.php?id=' + id;
-    }
+function confirmDelete(id, ten_cong_trinh, event) {
+    if(event) event.preventDefault(); // Chặn sự kiện mặc định
+    
+    Swal.fire({
+        title: 'Xác nhận xóa',
+        html: 'Bạn có chắc muốn xóa công trình <strong>"' + ten_cong_trinh + '"</strong>?<br>' +
+              '<span class="text-danger">Tất cả hạng mục và ghi chú liên quan sẽ bị xóa!</span>',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = BASE_URL + '/user/congtrinh/delete.php?id=' + id;
+        }
+    });
+    return false;
 }
 
 // Export Excel

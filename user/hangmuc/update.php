@@ -1,176 +1,234 @@
 <?php
-// user/hangmuc/update.php
-$page_title = 'Cập nhật tiến độ';
+// hangmuc/update.php
 require_once '../includes/header.php';
 
-$user_id = $_SESSION['id'];
 $id = isset($_GET['id']) ? (int)$_GET['id'] : 0;
+$error = '';
+$success = '';
 
-// Kiểm tra quyền
-$sql = "SELECT hm.*, ct.user_id, ct.ten_cong_trinh 
+// Lấy thông tin hạng mục
+$sql = "SELECT hm.*, ct.ten_cong_trinh, ct.user_id 
         FROM hangmucthicong hm
         LEFT JOIN congtrinh ct ON hm.congtrinh_id = ct.id
-        WHERE hm.id = '$id'";
+        WHERE hm.id = $id AND ct.user_id = '{$_SESSION['id']}'";
 $result = mysqli_query($conn, $sql);
-$hm = mysqli_fetch_assoc($result);
 
-if (!$hm || $hm['user_id'] != $user_id) {
-    echo "<script>
-        alert('Không tìm thấy hạng mục!');
-        window.location.href = 'index.php';
-    </script>";
+if(mysqli_num_rows($result) == 0) {
+    $_SESSION['error'] = 'Không tìm thấy hạng mục';
+    echo '<script>window.location.href="index.php";</script>';
     exit();
 }
 
-if (isset($_POST['capnhat'])) {
+$hm = mysqli_fetch_assoc($result);
+
+// Lấy lịch sử cập nhật gần nhất
+$sql_lichsu = "SELECT * FROM lichsucapnhat WHERE hangmuc_id = $id ORDER BY thoi_gian_cap_nhat DESC LIMIT 5";
+$lichsu_list = mysqli_query($conn, $sql_lichsu);
+
+if($_SERVER['REQUEST_METHOD'] == 'POST') {
     $phan_tram_moi = (int)$_POST['phan_tram_tien_do'];
-    $phan_tram_cu = $hm['phan_tram_tien_do'];
+    $ghi_chu_capnhat = mysqli_real_escape_string($conn, $_POST['ghi_chu_capnhat']);
     $ghi_chu = mysqli_real_escape_string($conn, $_POST['ghi_chu']);
     
-    // Xác định trạng thái
-    if ($phan_tram_moi == 0) {
-        $trang_thai = 'Chưa thi công';
-    } elseif ($phan_tram_moi == 100) {
-        $trang_thai = 'Hoàn thành';
+    // Xác định trạng thái mới
+    if($phan_tram_moi == 0) {
+        $trang_thai_moi = 'Chưa thi công';
+    } elseif($phan_tram_moi == 100) {
+        $trang_thai_moi = 'Hoàn thành';
     } else {
-        $trang_thai = 'Đang thi công';
+        $trang_thai_moi = 'Đang thi công';
     }
     
     // Cập nhật hạng mục
     $sql_update = "UPDATE hangmucthicong SET 
-                    phan_tram_tien_do = '$phan_tram_moi',
-                    trang_thai = '$trang_thai',
-                    ghi_chu = '$ghi_chu'
-                    WHERE id = '$id'";
+                   phan_tram_tien_do = $phan_tram_moi,
+                   trang_thai = '$trang_thai_moi',
+                   ghi_chu = '$ghi_chu',
+                   updated_at = NOW()
+                   WHERE id = $id";
     
-    if (mysqli_query($conn, $sql_update)) {
-        // Lưu lịch sử
-        $sql_history = "INSERT INTO lichsucapnhat (hangmuc_id, phan_tram_cu, phan_tram_moi, ghi_chu) 
-                        VALUES ('$id', '$phan_tram_cu', '$phan_tram_moi', '$ghi_chu')";
-        mysqli_query($conn, $sql_history);
+    if(mysqli_query($conn, $sql_update)) {
+        // Ghi lịch sử cập nhật
+        $sql_lichsu_insert = "INSERT INTO lichsucapnhat (hangmuc_id, phan_tram_cu, phan_tram_moi, ghi_chu) 
+                             VALUES ($id, {$hm['phan_tram_tien_do']}, $phan_tram_moi, '$ghi_chu_capnhat')";
+        mysqli_query($conn, $sql_lichsu_insert);
         
-        $success = "Cập nhật tiến độ thành công!";
+        // Ghi log
+        logActivity($conn, $_SESSION['id'], 'Cập nhật tiến độ', 
+                   "Cập nhật hạng mục {$hm['ten_hang_muc']}: {$hm['phan_tram_tien_do']}% → {$phan_tram_moi}%");
+        
+        $_SESSION['success'] = 'Cập nhật tiến độ thành công';
+        
+        // Cập nhật lại thông tin
+        $hm['phan_tram_tien_do'] = $phan_tram_moi;
+        $hm['trang_thai'] = $trang_thai_moi;
+        $hm['ghi_chu'] = $ghi_chu;
+        
+        // Refresh lịch sử
+        $lichsu_list = mysqli_query($conn, $sql_lichsu);
     } else {
-        $error = "Lỗi: " . mysqli_error($conn);
+        $error = 'Lỗi: ' . mysqli_error($conn);
     }
 }
-
-// Lấy lịch sử cập nhật
-$sql_history = "SELECT * FROM lichsucapnhat 
-                WHERE hangmuc_id = '$id' 
-                ORDER BY thoi_gian_cap_nhat DESC";
-$result_history = mysqli_query($conn, $sql_history);
 ?>
 
-<div class="container-fluid">
-    <div class="d-flex justify-content-between align-items-center mb-4">
-        <h4 class="mb-0">Cập nhật tiến độ</h4>
-        <nav aria-label="breadcrumb">
-            <ol class="breadcrumb mb-0">
-                <li class="breadcrumb-item"><a href="../dashboard.php">Dashboard</a></li>
-                <li class="breadcrumb-item"><a href="index.php">Hạng mục</a></li>
-                <li class="breadcrumb-item active">Cập nhật</li>
-            </ol>
-        </nav>
+<div class="content-wrapper">
+    <div class="page-header">
+        <div class="d-flex justify-content-between align-items-center flex-wrap">
+            <div>
+                <h4 class="mb-1">
+                    <i class="fas fa-pen me-2 text-warning"></i>
+                    Cập nhật tiến độ
+                </h4>
+                <p class="text-muted mb-0">
+                    <a href="../congtrinh/detail.php?id=<?php echo $hm['congtrinh_id']; ?>" class="text-decoration-none">
+                        <?php echo htmlspecialchars($hm['ten_cong_trinh']); ?>
+                    </a>
+                    / <?php echo htmlspecialchars($hm['ten_hang_muc']); ?>
+                </p>
+            </div>
+            <div class="mt-2 mt-sm-0">
+                <a href="detail.php?id=<?php echo $id; ?>" class="btn btn-info">
+                    <i class="fas fa-eye me-2"></i>Chi tiết
+                </a>
+                <a href="index.php" class="btn btn-secondary">
+                    <i class="fas fa-arrow-left me-2"></i>Quay lại
+                </a>
+            </div>
+        </div>
     </div>
 
+    <?php if($error): ?>
+    <div class="alert alert-danger alert-dismissible fade show" role="alert">
+        <i class="fas fa-exclamation-circle me-2"></i><?php echo $error; ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
+
     <div class="row">
-        <div class="col-md-6">
+        <!-- Form cập nhật -->
+        <div class="col-md-8">
             <div class="card mb-4">
                 <div class="card-header">
-                    <i class="fas fa-percent me-1"></i>
+                    <i class="fas fa-edit me-2 text-warning"></i>
                     Cập nhật tiến độ
                 </div>
                 <div class="card-body">
-                    <div class="mb-4">
-                        <h6 class="text-muted mb-1">Công trình</h6>
-                        <h5><?php echo $hm['ten_cong_trinh']; ?></h5>
-                        <h6 class="text-muted mt-3 mb-1">Hạng mục</h6>
-                        <h5><?php echo $hm['ten_hang_muc']; ?></h5>
-                    </div>
-                    
-                    <?php if (isset($error)): ?>
-                        <div class="alert alert-danger"><?php echo $error; ?></div>
-                    <?php endif; ?>
-                    <?php if (isset($success)): ?>
-                        <div class="alert alert-success"><?php echo $success; ?></div>
-                    <?php endif; ?>
-                    
-                    <form method="POST" action="">
-                        <div class="mb-3">
+                    <form method="POST">
+                        <!-- Tiến độ hiện tại -->
+                        <div class="mb-4">
                             <label class="form-label">Tiến độ hiện tại</label>
-                            <div class="d-flex align-items-center">
-                                <div class="progress flex-grow-1 me-3" style="height: 10px;">
-                                    <div class="progress-bar bg-<?php echo getProgressColor($hm['phan_tram_tien_do']); ?>" 
-                                         style="width: <?php echo $hm['phan_tram_tien_do']; ?>%"></div>
+                            <div class="progress" style="height: 30px;">
+                                <div class="progress-bar bg-<?php echo getProgressColor($hm['phan_tram_tien_do']); ?>" 
+                                     style="width: <?php echo $hm['phan_tram_tien_do']; ?>%; font-size: 14px; font-weight: bold;">
+                                    <?php echo $hm['phan_tram_tien_do']; ?>%
                                 </div>
-                                <span class="h5 mb-0"><?php echo $hm['phan_tram_tien_do']; ?>%</span>
                             </div>
                         </div>
-                        
-                        <div class="mb-3">
-                            <label class="form-label">Cập nhật tiến độ mới (%) <span class="text-danger">*</span></label>
-                            <input type="range" name="phan_tram_tien_do" class="form-range" 
-                                   min="0" max="100" value="<?php echo $hm['phan_tram_tien_do']; ?>" 
-                                   oninput="this.nextElementSibling.value = this.value">
-                            <output class="badge bg-primary mt-2 p-2"><?php echo $hm['phan_tram_tien_do']; ?>%</output>
+
+                        <!-- Tiến độ mới -->
+                        <div class="mb-4">
+                            <label class="form-label">Tiến độ mới (%)</label>
+                            <div class="d-flex align-items-center gap-3">
+                                <input type="range" name="phan_tram_tien_do" class="form-range" 
+                                       min="0" max="100" value="<?php echo $hm['phan_tram_tien_do']; ?>" 
+                                       onchange="updateRange(this.value)">
+                                <span class="badge bg-primary" id="rangeValue" style="min-width: 50px; font-size: 16px;">
+                                    <?php echo $hm['phan_tram_tien_do']; ?>%
+                                </span>
+                            </div>
+                            <div class="mt-2">
+                                <span class="badge bg-secondary">0% = Chưa thi công</span>
+                                <span class="badge bg-warning">1-99% = Đang thi công</span>
+                                <span class="badge bg-success">100% = Hoàn thành</span>
+                            </div>
                         </div>
-                        
-                        <div class="mb-3">
+
+                        <!-- Ghi chú cập nhật -->
+                        <div class="mb-4">
                             <label class="form-label">Ghi chú cập nhật</label>
-                            <textarea name="ghi_chu" class="form-control" rows="3" 
-                                      placeholder="Nhập ghi chú cho lần cập nhật này..."></textarea>
+                            <textarea name="ghi_chu_capnhat" class="form-control" rows="3" 
+                                      placeholder="Nhập lý do cập nhật, khó khăn, vướng mắc..."></textarea>
                         </div>
-                        
-                        <button type="submit" name="capnhat" class="btn btn-primary">
-                            <i class="fas fa-save"></i> Cập nhật
-                        </button>
-                        <a href="../congtrinh/detail.php?id=<?php echo $hm['congtrinh_id']; ?>" 
-                           class="btn btn-outline-secondary">
-                            <i class="fas fa-arrow-left"></i> Quay lại
-                        </a>
+
+                        <!-- Ghi chú chung -->
+                        <div class="mb-4">
+                            <label class="form-label">Ghi chú hạng mục</label>
+                            <textarea name="ghi_chu" class="form-control" rows="3"><?php echo htmlspecialchars($hm['ghi_chu']); ?></textarea>
+                        </div>
+
+                        <!-- Buttons -->
+                        <div class="text-center">
+                            <button type="submit" class="btn btn-primary px-5">
+                                <i class="fas fa-save me-2"></i>Cập nhật
+                            </button>
+                            <button type="reset" class="btn btn-secondary px-5">
+                                <i class="fas fa-undo me-2"></i>Reset
+                            </button>
+                        </div>
                     </form>
                 </div>
             </div>
         </div>
-        
-        <div class="col-md-6">
+
+        <!-- Lịch sử cập nhật -->
+        <div class="col-md-4">
             <div class="card">
                 <div class="card-header">
-                    <i class="fas fa-history me-1"></i>
+                    <i class="fas fa-history me-2 text-warning"></i>
                     Lịch sử cập nhật
                 </div>
-                <div class="card-body" style="max-height: 500px; overflow-y: auto;">
-                    <?php if (mysqli_num_rows($result_history) == 0): ?>
-                        <p class="text-muted text-center py-4">
-                            <i class="fas fa-clock fa-2x mb-2"></i><br>
-                            Chưa có lịch sử cập nhật
-                        </p>
+                <div class="card-body p-0">
+                    <?php if(mysqli_num_rows($lichsu_list) == 0): ?>
+                    <div class="text-center py-4">
+                        <i class="fas fa-history fa-3x text-muted mb-3"></i>
+                        <p class="text-muted">Chưa có lịch sử cập nhật</p>
+                    </div>
                     <?php else: ?>
-                        <?php while ($history = mysqli_fetch_assoc($result_history)): ?>
-                        <div class="mb-3 pb-3 border-bottom">
-                            <div class="d-flex justify-content-between">
-                                <small class="text-primary fw-bold">
-                                    <i class="fas fa-percent"></i> 
-                                    <?php echo $history['phan_tram_cu']; ?>% → 
-                                    <span class="text-success"><?php echo $history['phan_tram_moi']; ?>%</span>
-                                </small>
+                    <div class="list-group list-group-flush">
+                        <?php while($ls = mysqli_fetch_assoc($lichsu_list)): ?>
+                        <div class="list-group-item">
+                            <div class="d-flex justify-content-between align-items-center mb-2">
+                                <span class="badge bg-info">
+                                    <?php echo $ls['phan_tram_cu']; ?>% → <?php echo $ls['phan_tram_moi']; ?>%
+                                </span>
                                 <small class="text-muted">
-                                    <?php echo date('d/m/Y H:i', strtotime($history['thoi_gian_cap_nhat'])); ?>
+                                    <?php echo timeAgo($ls['thoi_gian_cap_nhat']); ?>
                                 </small>
                             </div>
-                            <?php if ($history['ghi_chu']): ?>
-                                <p class="mb-0 mt-1 small"><?php echo $history['ghi_chu']; ?></p>
+                            <?php if(!empty($ls['ghi_chu'])): ?>
+                            <p class="small mb-0"><?php echo htmlspecialchars($ls['ghi_chu']); ?></p>
                             <?php endif; ?>
                         </div>
                         <?php endwhile; ?>
+                    </div>
                     <?php endif; ?>
+                </div>
+                <div class="card-footer text-center">
+                    <a href="history.php?hangmuc_id=<?php echo $id; ?>" class="text-decoration-none">
+                        Xem tất cả lịch sử <i class="fas fa-arrow-right ms-2"></i>
+                    </a>
                 </div>
             </div>
         </div>
     </div>
 </div>
 
-<?php
-require_once '../includes/footer.php';
-?>
+<script>
+function updateRange(value) {
+    document.getElementById('rangeValue').textContent = value + '%';
+    
+    // Đổi màu badge
+    const badge = document.getElementById('rangeValue');
+    badge.className = 'badge ';
+    if(value == 0) {
+        badge.classList.add('bg-secondary');
+    } else if(value == 100) {
+        badge.classList.add('bg-success');
+    } else {
+        badge.classList.add('bg-warning');
+    }
+}
+</script>
+
+<?php require_once '../includes/footer.php'; ?>
