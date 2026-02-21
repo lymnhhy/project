@@ -49,7 +49,7 @@ if (mysqli_num_rows($result_user) == 0) {
 
 $current_user = mysqli_fetch_assoc($result_user);
 $current_page = basename($_SERVER['PHP_SELF']);
-$page_title = isset($page_title) ? $page_title : 'Dashboard';
+$page_title = isset($page_title) ? $page_title : '';
 
 // Hàm helper
 function formatDate($date) {
@@ -891,7 +891,7 @@ function getStatusBadgeByID($id) {
         </div>
         
         <!-- MAIN MENU -->
-        <div class="nav-section">MAIN MENU</div>
+        <div class="nav-section">TRANG CHỦ</div>
         
         <div class="nav-item">
             <a href="<?php echo BASE_URL; ?>/user/dashboard.php" 

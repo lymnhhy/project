@@ -3,18 +3,18 @@
 session_start();
 include "config/db.php";
 
-if (!isset($_SESSION['user'])) {
-    header("Location: guest.php");
-    exit();
-}
+// if (!isset($_SESSION['user'])) {
+//     header("Location: guest.php");
+//     exit();
+// }
 
-// Phân quyền chuyển hướng
-if ($_SESSION['role'] == 1) {
-    header("Location: admin/dashboard.php");
-} else {
-    header("Location: user/dashboard.php");
-}
-exit();
+// // Phân quyền chuyển hướng
+// if ($_SESSION['role'] == 1) {
+//     header("Location: admin/dashboard.php");
+// } else {
+//     header("Location: user/dashboard.php");
+// }
+// exit();
 ?>
 <!DOCTYPE html>
 <html lang="en">
@@ -265,7 +265,7 @@ exit();
                 </div>
             </div>
             <!-- Single Slide -->
-            <div class="single-hero-slide bg-img" style="background-image: url(ddddimg/bg-img/bddd3.jpg);">
+            <div class="single-hero-slide bg-img" style="background-image: url(img/bg-img/b3.jpg);">
                 <div class="container h-100">
                     <div class="row h-100 align-items-center">
                         <div class="col-12">
