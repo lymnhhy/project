@@ -13,7 +13,7 @@ if(isset($_POST['add_loai'])) {
     } else {
         $_SESSION['error'] = "Lỗi: " . mysqli_error($conn);
     }
-    header("Location: categories.php");
+    header("Location: ccongtrinh.php");
     exit();
 }
 
@@ -29,7 +29,7 @@ if(isset($_POST['edit_loai'])) {
     } else {
         $_SESSION['error'] = "Lỗi: " . mysqli_error($conn);
     }
-    header("Location: categories.php");
+    header("Location: congtrinh.php");
     exit();
 }
 
@@ -53,7 +53,7 @@ if(isset($_GET['delete_loai'])) {
             $_SESSION['error'] = "Lỗi: " . mysqli_error($conn);
         }
     }
-    header("Location: categories.php");
+    header("Location: congtrinh.php");
     exit();
 }
 
@@ -68,7 +68,7 @@ if(isset($_POST['add_trangthai'])) {
     } else {
         $_SESSION['error'] = "Lỗi: " . mysqli_error($conn);
     }
-    header("Location: categories.php");
+    header("Location: congtrinh.php");
     exit();
 }
 
@@ -84,7 +84,7 @@ if(isset($_POST['edit_trangthai'])) {
     } else {
         $_SESSION['error'] = "Lỗi: " . mysqli_error($conn);
     }
-    header("Location: categories.php");
+    header("Location: congtrinh.php");
     exit();
 }
 
@@ -108,7 +108,7 @@ if(isset($_GET['delete_trangthai'])) {
             $_SESSION['error'] = "Lỗi: " . mysqli_error($conn);
         }
     }
-    header("Location: categories.php");
+    header("Location: congtrinh.php");
     exit();
 }
 

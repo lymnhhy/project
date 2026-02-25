@@ -1,5 +1,6 @@
 <?php
-include "includes/header.php";
+$page_title = 'Dashboard';
+include 'includes/header.php';
 include dirname(__DIR__) . "/admin/includes/functions.php";
 
 ?>
@@ -122,4 +123,4 @@ $user_active = mysqli_fetch_assoc($result_user);
     </table>
 </div>
 
-<?php include "includes/footer.php"; ?>
+<?php include 'includes/footer.php'; ?>

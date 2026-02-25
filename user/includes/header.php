@@ -989,9 +989,9 @@ function getStatusBadgeByID($id) {
         </div>
         
         <div class="nav-item">
-            <a href="<?php echo BASE_URL; ?>/user/baocao/export.php" 
-               class="nav-link <?php echo $current_page == 'export.php' && strpos($_SERVER['REQUEST_URI'], 'baocao') !== false ? 'active' : ''; ?>">
-                <i class="fas fa-file-excel"></i> Xuất báo cáo Excel
+            <a href="<?php echo BASE_URL; ?>/user/baocao/history.php" 
+               class="nav-link <?php echo $current_page == 'history.php' && strpos($_SERVER['REQUEST_URI'], 'baocao') !== false ? 'active' : ''; ?>">
+                <i class="fas fa-file-excel"></i> Lịch sử xuất Excel
             </a>
         </div>
         
