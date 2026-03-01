@@ -1,4 +1,5 @@
 <?php
+ob_start();
 include dirname(__DIR__) . "/includes/header.php";
 include $_SERVER['DOCUMENT_ROOT'] . "/project/admin/includes/functions.php";
 

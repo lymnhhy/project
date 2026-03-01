@@ -339,7 +339,7 @@ $thongke = mysqli_fetch_assoc($result_thongke);
                                     <div class="btn-group">
                                         <a href="update.php?id=<?php echo $hm['id']; ?>" 
                                            class="btn btn-sm btn-primary" title="Cập nhật tiến độ">
-                                            <i class="fas fa-pen"></i>
+                                            <i class="fas fa-chart-line"></i>
                                         </a>
                                         <a href="detail.php?id=<?php echo $hm['id']; ?>" 
                                            class="btn btn-sm btn-info" title="Chi tiết">

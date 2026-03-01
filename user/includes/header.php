@@ -14,6 +14,27 @@ if (!$conn) {
     die("Lỗi kết nối database: " . mysqli_connect_error());
 }
 
+// LẤY THÔNG TIN CẤU HÌNH WEBSITE
+$sql_config = "SELECT * FROM cauhinhweb WHERE id = 1";
+$result_config = mysqli_query($conn, $sql_config);
+$config = mysqli_fetch_assoc($result_config);
+
+// Nếu chưa có cấu hình, tạo mảng mặc định
+if(!$config) {
+    $config = [
+        'ten_website' => 'ProTrack',
+        'logo' => '/project/uploads/logo/default-logo.png',
+        'favicon' => '/project/uploads/favicon/favicon.ico',
+        'slogan' => 'Hệ thống theo dõi dự án chuyên nghiệp',
+        'so_dien_thoai' => '',
+        'email' => '',
+        'dia_chi' => '',
+        'website' => '',
+        'facebook' => '',
+        'zalo' => ''
+    ];
+}
+
 // Kiểm tra đăng nhập
 if (!isset($_SESSION['user']) || !isset($_SESSION['id']) || !isset($_SESSION['role'])) {
     header("Location: " . BASE_URL . "/guest.php");
@@ -51,6 +72,7 @@ $current_user = mysqli_fetch_assoc($result_user);
 $current_page = basename($_SERVER['PHP_SELF']);
 $page_title = isset($page_title) ? $page_title : '';
 
+// Các hàm helper giữ nguyên...
 // Hàm helper
 function formatDate($date) {
     if (empty($date) || $date == '0000-00-00') return 'Chưa cập nhật';
@@ -147,66 +169,22 @@ function logActivity($conn, $user_id, $action, $detail) {
             VALUES ('$user_id', '$action', '$detail', '$ip', '$thoi_gian')";
     @mysqli_query($conn, $sql);
 }
+
 $so_thong_bao = countThongBaoChuaDoc($conn, $user_id);
-// Thêm vào includes/header.php
-function timeAgo($time) {
-    if(empty($time)) return 'Không xác định';
-    
-    $time = strtotime($time);
-    $now = time();
-    $diff = $now - $time;
-    
-    if($diff < 60) {
-        return 'Vài giây trước';
-    } elseif($diff < 3600) {
-        $mins = floor($diff / 60);
-        return $mins . ' phút trước';
-    } elseif($diff < 86400) {
-        $hours = floor($diff / 3600);
-        return $hours . ' giờ trước';
-    } elseif($diff < 2592000) {
-        $days = floor($diff / 86400);
-        return $days . ' ngày trước';
-    } elseif($diff < 31536000) {
-        $months = floor($diff / 2592000);
-        return $months . ' tháng trước';
-    } else {
-        return date('d/m/Y', $time);
-    }
-}
-// Thêm vào includes/header.php
-
-function getTrangThaiByID($id) {
-    switch($id) {
-        case 1: return 'Chưa thi công';
-        case 2: return 'Đang thi công';
-        case 3: return 'Hoàn thành';
-        default: return 'Không xác định';
-    }
-}
-
-function getStatusBadgeByID($id) {
-    switch($id) {
-        case 1: return 'secondary';
-        case 2: return 'warning';
-        case 3: return 'success';
-        default: return 'secondary';
-    }
-}
-
 ?>
 <!DOCTYPE html>
 <html lang="vi">
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="ProTrack - Hệ thống theo dõi tiến độ dự án chuyên nghiệp">
+    <meta name="description" content="<?php echo htmlspecialchars($config['mo_ta'] ?? 'ProTrack - Hệ thống theo dõi tiến độ dự án chuyên nghiệp'); ?>">
+    <meta name="keywords" content="<?php echo htmlspecialchars($config['tu_khoa'] ?? 'quản lý dự án, theo dõi tiến độ, xây dựng'); ?>">
     <meta name="author" content="ProTrack">
     
-    <title><?php echo htmlspecialchars($page_title); ?> | ProTrack</title>
+    <title><?php echo htmlspecialchars($page_title); ?> | <?php echo htmlspecialchars($config['ten_website']); ?></title>
     
     <!-- Favicon -->
-    <link rel="icon" type="image/x-icon" href="<?php echo BASE_URL; ?>/assets/img/favicon.ico">
+    <link rel="icon" type="image/x-icon" href="<?php echo $config['favicon'] ?? BASE_URL . '/assets/img/favicon.ico'; ?>">
     
     <!-- Bootstrap 5 CSS -->
     <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
@@ -224,13 +202,13 @@ function getStatusBadgeByID($id) {
     <!-- Select2 -->
     <link href="https://cdn.jsdelivr.net/npm/select2@4.1.0-rc.0/dist/css/select2.min.css" rel="stylesheet" />
     <link href="https://cdn.jsdelivr.net/npm/select2-bootstrap-5-theme@1.3.0/dist/select2-bootstrap-5-theme.min.css" rel="stylesheet" />
-    <!-- jQuery trước -->
-<script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    
+    <!-- jQuery -->
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
 
-<!-- Bootstrap sau jQuery -->
-<script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
+    <!-- Bootstrap -->
+    <script src="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/js/bootstrap.bundle.min.js"></script>
 
-<!-- Các script khác -->
     <!-- Chart.js -->
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
     
@@ -238,6 +216,7 @@ function getStatusBadgeByID($id) {
     <link rel="stylesheet" href="https://cdn.jsdelivr.net/npm/flatpickr/dist/flatpickr.min.css">
     
     <style>
+        /* Giữ nguyên toàn bộ style của bạn */
         * {
             margin: 0;
             padding: 0;
@@ -283,19 +262,38 @@ function getStatusBadgeByID($id) {
             padding: 25px 24px;
             border-bottom: 1px solid rgba(255, 255, 255, 0.1);
             margin-bottom: 20px;
+            text-align: center;
+        }
+        
+        .sidebar .brand .logo-wrapper {
+            margin-bottom: 15px;
+        }
+        
+        .sidebar .brand .logo-wrapper img {
+            max-height: 60px;
+            max-width: 180px;
+            border-radius: 8px;
+            background: rgba(255,255,255,0.1);
+            padding: 8px;
         }
         
         .sidebar .brand h3 {
             color: #fff;
             font-weight: 700;
-            font-size: 24px;
+            font-size: 20px;
             margin: 0;
         }
         
         .sidebar .brand h3 i {
             color: #fbbf24;
             margin-right: 10px;
-            font-size: 28px;
+            font-size: 24px;
+        }
+        
+        .sidebar .brand p {
+            color: rgba(255,255,255,0.6);
+            font-size: 12px;
+            margin: 5px 0 0;
         }
         
         .sidebar .user-info {
@@ -657,7 +655,7 @@ function getStatusBadgeByID($id) {
         }
         
         .btn-primary {
-            background: #fbbf24;
+            background: #089b32;
             border-color: #fbbf24;
             color: #000;
         }
@@ -871,7 +869,13 @@ function getStatusBadgeByID($id) {
     <!-- Sidebar -->
     <div class="sidebar" id="sidebar">
         <div class="brand">
-            <h3><i class="fas fa-hard-hat"></i> ProTrack</h3>
+            <?php if(!empty($config['logo'])): ?>
+            <div class="logo-wrapper">
+                <img src="<?php echo $config['logo']; ?>" alt="<?php echo htmlspecialchars($config['ten_website']); ?>">
+            </div>
+            <?php endif; ?>
+            <h3><i class="fas fa-hard-hat"></i> <?php echo htmlspecialchars($config['ten_website']); ?></h3>
+            <p><?php echo htmlspecialchars($config['slogan'] ?? 'Hệ thống theo dõi dự án'); ?></p>
         </div>
         
         <div class="user-info">
@@ -954,23 +958,23 @@ function getStatusBadgeByID($id) {
                 <i class="fas fa-history"></i> Lịch sử cập nhật
             </a>
         </div>
+        
         <div class="nav-section">THEO DÕI TIẾN ĐỘ</div>
 
-<!-- Theo dõi tiến độ tổng thể -->
-<div class="nav-item">
-    <a href="<?php echo BASE_URL; ?>/user/tiendo/theo-doi.php" 
-       class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/user/tiendo/theo-doi') !== false ? 'active' : ''; ?>">
-        <i class="fas fa-eye"></i> Theo dõi tiến độ
-    </a>
-</div>
+        <div class="nav-item">
+            <a href="<?php echo BASE_URL; ?>/user/tiendo/theo-doi.php" 
+               class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/user/tiendo/theo-doi') !== false ? 'active' : ''; ?>">
+                <i class="fas fa-eye"></i> Theo dõi tiến độ
+            </a>
+        </div>
 
-<!-- Cập nhật tiến độ nhanh -->
-<div class="nav-item">
-    <a href="<?php echo BASE_URL; ?>/user/tiendo/cap-nhat-nhanh.php" 
-       class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/user/tiendo/cap-nhat-nhanh') !== false ? 'active' : ''; ?>">
-        <i class="fas fa-bolt"></i> Cập nhật nhanh
-    </a>
-</div>
+        <div class="nav-item">
+            <a href="<?php echo BASE_URL; ?>/user/tiendo/cap-nhat-nhanh.php" 
+               class="nav-link <?php echo strpos($_SERVER['REQUEST_URI'], '/user/tiendo/cap-nhat-nhanh') !== false ? 'active' : ''; ?>">
+                <i class="fas fa-bolt"></i> Cập nhật nhanh
+            </a>
+        </div>
+        
         <!-- BÁO CÁO & THỐNG KÊ -->
         <div class="nav-section">BÁO CÁO & THỐNG KÊ</div>
         

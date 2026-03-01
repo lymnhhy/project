@@ -347,7 +347,7 @@ if (isset($_POST['dangnhap'])) {
                                 <!-- Nav Start -->
                                 <div class="classynav">
                                     <ul>
-                                        <li><a href="#">Home</a></li>
+                                        <li><a href="home.php">Home</a></li>
                                         <li><a href="#">About Us</a></li>
                                         <li><a href="#">Lifestyle</a></li>
                                         <li><a href="#">travel</a></li>

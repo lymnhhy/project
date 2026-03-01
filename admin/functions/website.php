@@ -1,5 +1,6 @@
 <?php
 // admin/functions/website.php
+ob_start();
 $page_title = 'Cấu hình website';
 include dirname(__DIR__) . "/includes/header.php";
 
