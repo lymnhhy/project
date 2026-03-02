@@ -103,9 +103,9 @@ $thongke = mysqli_fetch_assoc($result_thongke);
                 <a href="add.php" class="btn btn-primary">
                     <i class="fas fa-plus-circle me-2"></i>Thêm công trình
                 </a>
-                <button onclick="exportExcel()" class="btn btn-success">
+                <!-- <button onclick="exportExcel()" class="btn btn-success">
                     <i class="fas fa-file-excel me-2"></i>Xuất Excel
-                </button>
+                </button> -->
             </div>
         </div>
     </div>
@@ -358,12 +358,12 @@ $thongke = mysqli_fetch_assoc($result_thongke);
                                            class="btn btn-sm btn-outline-success" title="Tiến độ">
                                             <i class="fas fa-chart-line"></i>
                                         </a>
-<button type="button" 
-        onclick="confirmDelete(<?php echo $ct['id']; ?>, '<?php echo addslashes($ct['ten_cong_trinh']); ?>'); return false;"
-        class="btn btn-sm btn-outline-danger" 
-        title="Xóa">
-    <i class="fas fa-trash"></i>
-</button>
+                                        <button type="button" 
+                                                onclick="confirmDelete3(<?php echo $ct['id']; ?>, '<?php echo addslashes($ct['ten_cong_trinh']); ?>'); return false;"
+                                                class="btn btn-sm btn-outline-danger" 
+                                                title="Xóa">
+                                            <i class="fas fa-trash"></i>
+                                        </button>
                                         
                                     </div>
                                 </td>
@@ -410,7 +410,7 @@ document.getElementById('selectAll').addEventListener('change', function(e) {
     document.querySelectorAll('input[name="ids[]"]').forEach(cb => cb.checked = e.target.checked);
 });
 
-function confirmDelete(id, ten_cong_trinh, event) {
+function confirmDelete3(id, ten_cong_trinh, event) {
     if(event) event.preventDefault(); // Chặn sự kiện mặc định
     
     Swal.fire({

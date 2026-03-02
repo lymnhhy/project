@@ -10,19 +10,21 @@ $success = '';
 $sql_ct = "SELECT id, ten_cong_trinh FROM congtrinh WHERE user_id = '{$_SESSION['id']}' ORDER BY ten_cong_trinh";
 $congtrinh_list = mysqli_query($conn, $sql_ct);
 
+// Lấy danh sách loại hạng mục từ bảng loaihangmuc
+$sql_loaihm = "SELECT id, ma_loai, ten_loai, don_vi_tinh FROM loaihangmuc WHERE trang_thai = 1 ORDER BY ten_loai";
+$loaihm_list = mysqli_query($conn, $sql_loaihm);
+
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
     // Lấy dữ liệu từ form
     $congtrinh_id = (int)$_POST['congtrinh_id'];
     $ma_hang_muc = mysqli_real_escape_string($conn, $_POST['ma_hang_muc'] ?? 'HM-' . time());
     $ten_hang_muc = mysqli_real_escape_string($conn, $_POST['ten_hang_muc']);
+    $loaihangmuc_id = !empty($_POST['loaihangmuc_id']) ? (int)$_POST['loaihangmuc_id'] : 'NULL';
     
-    // XỬ LÝ KINH PHÍ - CHỈ LOẠI BỎ DẤU CHẤM, GIỮ NGUYÊN SỐ
+    // XỬ LÝ KINH PHÍ
     $kinh_phi_raw = $_POST['kinh_phi'] ?? '0';
-    // Loại bỏ dấu chấm (phân cách nghìn)
     $kinh_phi = str_replace('.', '', $kinh_phi_raw);
-    // Nếu có dấu phẩy (do number_format), chuyển thành .
     $kinh_phi = str_replace(',', '', $kinh_phi);
-    // Chuyển thành số
     $kinh_phi = $kinh_phi !== '' ? (float)$kinh_phi : 0;
     
     $ngay_bat_dau = $_POST['ngay_bat_dau'];
@@ -51,10 +53,10 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
     } elseif(strtotime($ngay_ket_thuc) < strtotime($ngay_bat_dau)) {
         $error = 'Ngày kết thúc phải sau ngày bắt đầu';
     } else {
-        // Insert database
-        $sql = "INSERT INTO hangmucthicong (ma_hang_muc, ten_hang_muc, congtrinh_id, kinh_phi, 
+        // Insert database với loaihangmuc_id
+        $sql = "INSERT INTO hangmucthicong (ma_hang_muc, ten_hang_muc, loaihangmuc_id, congtrinh_id, kinh_phi, 
                 ngay_bat_dau, ngay_ket_thuc, phan_tram_tien_do, trang_thai, ghi_chu) 
-                VALUES ('$ma_hang_muc', '$ten_hang_muc', $congtrinh_id, '$kinh_phi', 
+                VALUES ('$ma_hang_muc', '$ten_hang_muc', $loaihangmuc_id, $congtrinh_id, '$kinh_phi', 
                 '$ngay_bat_dau', '$ngay_ket_thuc', $phan_tram_tien_do, '$trang_thai', '$ghi_chu')";
         
         if(mysqli_query($conn, $sql)) {
@@ -71,7 +73,6 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
             mysqli_query($conn, $sql_lichsu);
             
             $_SESSION['success'] = 'Thêm hạng mục thành công';
-            // SỬA ĐƯỜNG DẪN - chuyển về index.php
             echo '<script>window.location.href="index.php";</script>';
             exit();
         } else {
@@ -154,11 +155,34 @@ $ma_hm = 'HM-' . date('Ymd') . '-' . rand(100, 999);
                     </div>
                 </div>
 
-                <div class="mb-3">
-                    <label class="form-label">Tên hạng mục <span class="text-danger">*</span></label>
-                    <input type="text" name="ten_hang_muc" class="form-control" 
-                           value="<?php echo $_POST['ten_hang_muc'] ?? ''; ?>" 
-                           placeholder="VD: Thi công phần móng, Lắp đặt điện nước,..." required>
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <label class="form-label">Loại hạng mục</label>
+                        <select name="loaihangmuc_id" class="form-select">
+                            <option value="">-- Chọn loại hạng mục --</option>
+                            <?php if($loaihm_list && mysqli_num_rows($loaihm_list) > 0): ?>
+                                <?php while($loai = mysqli_fetch_assoc($loaihm_list)): ?>
+                                <option value="<?php echo $loai['id']; ?>" 
+                                    <?php echo ($_POST['loaihangmuc_id'] ?? '') == $loai['id'] ? 'selected' : ''; ?>>
+                                    <?php echo htmlspecialchars($loai['ten_loai']); ?>
+                                    <?php if(!empty($loai['don_vi_tinh'])): ?>
+                                        (<?php echo htmlspecialchars($loai['don_vi_tinh']); ?>)
+                                    <?php endif; ?>
+                                </option>
+                                <?php endwhile; ?>
+                            <?php else: ?>
+                                <option value="" disabled>Chưa có dữ liệu loại hạng mục</option>
+                            <?php endif; ?>
+                        </select>
+                        <small class="text-muted">Chọn loại để dễ quản lý và thống kê</small>
+                    </div>
+                    
+                    <div class="col-md-6">
+                        <label class="form-label">Tên hạng mục <span class="text-danger">*</span></label>
+                        <input type="text" name="ten_hang_muc" class="form-control" 
+                               value="<?php echo $_POST['ten_hang_muc'] ?? ''; ?>" 
+                               placeholder="VD: Thi công phần móng, Lắp đặt điện nước,..." required>
+                    </div>
                 </div>
 
                 <div class="row mb-3">

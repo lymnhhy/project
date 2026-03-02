@@ -143,6 +143,17 @@ function countThongBaoChuaDoc($conn, $user_id) {
     }
     return 0;
 }
+function timeAgo($time) {
+    $time = strtotime($time);
+    $now = time();
+    $diff = $now - $time;
+    
+    if($diff < 60) return 'Vài giây trước';
+    if($diff < 3600) return floor($diff/60) . ' phút trước';
+    if($diff < 86400) return floor($diff/3600) . ' giờ trước';
+    if($diff < 2592000) return floor($diff/86400) . ' ngày trước';
+    return date('d/m/Y', $time);
+}
 // Hàm ghi log hoạt động
 function logActivity($conn, $user_id, $action, $detail) {
     $ip = $_SERVER['REMOTE_ADDR'];
@@ -874,8 +885,8 @@ $so_thong_bao = countThongBaoChuaDoc($conn, $user_id);
                 <img src="<?php echo $config['logo']; ?>" alt="<?php echo htmlspecialchars($config['ten_website']); ?>">
             </div>
             <?php endif; ?>
-            <h3><i class="fas fa-hard-hat"></i> <?php echo htmlspecialchars($config['ten_website']); ?></h3>
-            <p><?php echo htmlspecialchars($config['slogan'] ?? 'Hệ thống theo dõi dự án'); ?></p>
+            <!-- <h3><i class="fas fa-hard-hat"></i> <?php echo htmlspecialchars($config['ten_website']); ?></h3> -->
+            <!-- <p><?php echo htmlspecialchars($config['slogan'] ?? 'Hệ thống theo dõi dự án'); ?></p> -->
         </div>
         
         <div class="user-info">

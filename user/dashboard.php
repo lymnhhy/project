@@ -213,9 +213,9 @@ while ($ct = mysqli_fetch_assoc($result_bieudo)) {
             <a href="hangmuc/add.php" class="btn btn-success">
                 <i class="fas fa-plus-circle me-2"></i>Thêm hạng mục
             </a>
-            <a href="baocao/export.php" class="btn btn-outline-primary">
+            <!-- <a href="baocao/export.php" class="btn btn-outline-primary">
                 <i class="fas fa-download me-2"></i>Xuất báo cáo
-            </a>
+            </a> -->
         </div>
     </div>
 </div>

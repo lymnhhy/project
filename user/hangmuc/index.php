@@ -336,25 +336,32 @@ $thongke = mysqli_fetch_assoc($result_thongke);
                                     <?php endif; ?>
                                 </td>
                                 <td>
-                                    <div class="btn-group">
-                                        <a href="update.php?id=<?php echo $hm['id']; ?>" 
-                                           class="btn btn-sm btn-primary" title="Cập nhật tiến độ">
-                                            <i class="fas fa-chart-line"></i>
-                                        </a>
-                                        <a href="detail.php?id=<?php echo $hm['id']; ?>" 
-                                           class="btn btn-sm btn-info" title="Chi tiết">
-                                            <i class="fas fa-eye"></i>
-                                        </a>
-                                        <a href="edit.php?id=<?php echo $hm['id']; ?>" 
-                                           class="btn btn-sm btn-warning" title="Sửa">
-                                            <i class="fas fa-edit"></i>
-                                        </a>
-                                        <a href="../ghichu/add.php?hangmuc_id=<?php echo $hm['id']; ?>" 
-                                           class="btn btn-sm btn-secondary" title="Thêm ghi chú">
-                                            <i class="fas fa-sticky-note"></i>
-                                        </a>
-                                    </div>
-                                </td>
+    <div class="btn-group">
+        <a href="update.php?id=<?php echo $hm['id']; ?>" 
+           class="btn btn-sm btn-primary" title="Cập nhật tiến độ">
+            <i class="fas fa-chart-line"></i>
+        </a>
+        <a href="detail.php?id=<?php echo $hm['id']; ?>" 
+           class="btn btn-sm btn-info" title="Chi tiết">
+            <i class="fas fa-eye"></i>
+        </a>
+        <a href="edit.php?id=<?php echo $hm['id']; ?>" 
+           class="btn btn-sm btn-warning" title="Sửa">
+            <i class="fas fa-edit"></i>
+        </a>
+        <a href="../ghichu/add.php?hangmuc_id=<?php echo $hm['id']; ?>" 
+           class="btn btn-sm btn-secondary" title="Thêm ghi chú">
+            <i class="fas fa-sticky-note"></i>
+        </a>
+        <!-- THÊM NÚT XÓA Ở ĐÂY -->
+        <button type="button" 
+                onclick="confirmDelete4(<?php echo $hm['id']; ?>, '<?php echo addslashes($hm['ten_hang_muc']); ?>')" 
+                class="btn btn-sm btn-danger" 
+                title="Xóa hạng mục">
+            <i class="fas fa-trash"></i>
+        </button>
+    </div>
+</td>
                             </tr>
                             <?php endwhile; ?>
                         <?php endif; ?>
@@ -408,7 +415,26 @@ function filterByStatus(status) {
     url.searchParams.set('page', '1');
     window.location.href = url.toString();
 }
-
+// Hàm xác nhận xóa hạng mục
+function confirmDelete4(id, ten_hang_muc) {
+    Swal.fire({
+        title: 'Xác nhận xóa',
+        html: 'Bạn có chắc muốn xóa hạng mục <strong>"' + ten_hang_muc + '"</strong>?<br>' +
+              '<span class="text-danger">Ghi chú và lịch sử cập nhật liên quan sẽ bị xóa!</span>',
+        icon: 'warning',
+        showCancelButton: true,
+        confirmButtonColor: '#dc3545',
+        cancelButtonColor: '#6c757d',
+        confirmButtonText: 'Xóa',
+        cancelButtonText: 'Hủy',
+        reverseButtons: true
+    }).then((result) => {
+        if (result.isConfirmed) {
+            window.location.href = 'delete.php?id=' + id;
+        }
+    });
+    return false;
+}
 function exportExcel() {
     const params = new URLSearchParams(window.location.search).toString();
     window.location.href = 'export.php?' + params;

@@ -77,9 +77,9 @@ $result_thang = mysqli_query($conn, $sql_thang);
             <p class="text-muted mb-0">Thống kê tổng quan công trình và hạng mục</p>
         </div>
         <div class="d-flex gap-2 mt-2 mt-sm-0">
-            <a href="export.php?type=tonghop" class="btn btn-success">
+            <!-- <a href="export.php?type=tonghop" class="btn btn-success">
                 <i class="fas fa-file-excel me-2"></i>Xuất Excel
-            </a>
+            </a> -->
             <a href="history.php" class="btn btn-outline-primary">
                 <i class="fas fa-history me-2"></i>Lịch sử báo cáo
             </a>

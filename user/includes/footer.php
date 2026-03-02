@@ -260,7 +260,25 @@ function confirmDelete(id, message = 'Bạn có chắc muốn xóa?') {
     });
     return false;
 }
-        
+// function confirmDelete(id, message = 'Bạn có chắc muốn xóa?') {
+//     Swal.fire({
+//         title: 'Xác nhận',
+//         text: message,
+//         icon: 'warning',
+//         showCancelButton: true,
+//         confirmButtonColor: '#ef4444',
+//         cancelButtonColor: '#64748b',
+//         confirmButtonText: 'Xóa',
+//         cancelButtonText: 'Hủy',
+//         reverseButtons: true
+//     }).then((result) => {
+//         if (result.isConfirmed) {
+//             // SỬA Ở ĐÂY: thêm tham số id vào URL
+//             window.location.href = BASE_URL + '/user/congtrinh/delete.php?id=' + id;
+//         }
+//     });
+//     return false;
+// }        
         // Show success message
         function showSuccess(message) {
             Swal.fire({
