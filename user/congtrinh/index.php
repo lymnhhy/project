@@ -376,31 +376,44 @@ $thongke = mysqli_fetch_assoc($result_thongke);
         </div>
         
         <!-- Phân trang -->
-        <?php if($total_pages > 1): ?>
-        <div class="card-footer">
-            <nav aria-label="Page navigation">
-                <ul class="pagination justify-content-center mb-0">
-                    <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
-                        <a class="page-link" href="?page=<?php echo $page-1; ?><?php echo $query_string; ?>">
-                            <i class="fas fa-chevron-left"></i>
-                        </a>
-                    </li>
-                    <?php for($i = 1; $i <= $total_pages; $i++): ?>
-                    <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
-                        <a class="page-link" href="?page=<?php echo $i; ?><?php echo $query_string; ?>">
-                            <?php echo $i; ?>
-                        </a>
-                    </li>
-                    <?php endfor; ?>
-                    <li class="page-item <?php echo $page >= $total_pages ? 'disabled' : ''; ?>">
-                        <a class="page-link" href="?page=<?php echo $page+1; ?><?php echo $query_string; ?>">
-                            <i class="fas fa-chevron-right"></i>
-                        </a>
-                    </li>
-                </ul>
-            </nav>
-        </div>
-        <?php endif; ?>
+        <!-- Phân trang -->
+<?php 
+// TẠO QUERY STRING GIỮ LẠI FILTER - THÊM ĐOẠN NÀY
+$query_string = '';
+if(!empty($_GET)) {
+    $params = $_GET;
+    unset($params['page']); // Loại bỏ page để thêm sau
+    if(!empty($params)) {
+        $query_string = '&' . http_build_query($params);
+    }
+}
+?>
+
+<?php if($total_pages > 1): ?>
+<div class="card-footer">
+    <nav aria-label="Page navigation">
+        <ul class="pagination justify-content-center mb-0">
+            <li class="page-item <?php echo $page <= 1 ? 'disabled' : ''; ?>">
+                <a class="page-link" href="?page=<?php echo $page-1; ?><?php echo $query_string; ?>">
+                    <i class="fas fa-chevron-left"></i>
+                </a>
+            </li>
+            <?php for($i = 1; $i <= $total_pages; $i++): ?>
+            <li class="page-item <?php echo $i == $page ? 'active' : ''; ?>">
+                <a class="page-link" href="?page=<?php echo $i; ?><?php echo $query_string; ?>">
+                    <?php echo $i; ?>
+                </a>
+            </li>
+            <?php endfor; ?>
+            <li class="page-item <?php echo $page >= $total_pages ? 'disabled' : ''; ?>">
+                <a class="page-link" href="?page=<?php echo $page+1; ?><?php echo $query_string; ?>">
+                    <i class="fas fa-chevron-right"></i>
+                </a>
+            </li>
+        </ul>
+    </nav>
+</div>
+<?php endif; ?>
     </div>
 </div>
 
