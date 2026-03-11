@@ -1,21 +1,3 @@
-<?php
-// trangchu.php - Chuyển hướng sau đăng nhập
-session_start();
-include "config/db.php";
-
-// if (!isset($_SESSION['user'])) {
-//     header("Location: guest.php");
-//     exit();
-// }
-
-// // Phân quyền chuyển hướng
-// if ($_SESSION['role'] == 1) {
-//     header("Location: admin/dashboard.php");
-// } else {
-//     header("Location: user/dashboard.php");
-// }
-// exit();
-?>
 <!DOCTYPE html>
 <html lang="en">
 
@@ -77,9 +59,9 @@ include "config/db.php";
                                 <ul>
                                     <li><a href="#">Hello World!</a></li>
                                     <li><a href="#">Hello Universe!</a></li>
-                                    <li><a href="#">Hello Architecture!</a></li>
-                                    <li><a href="#">Hello Project!</a></li>
-                                    <li><a href="#">Hello ProTrack!</a></li>
+                                    <li><a href="#">Hello Original!</a></li>
+                                    <li><a href="#">Hello Earth!</a></li>
+                                    <li><a href="#">Hello Colorlib!</a></li>
                                 </ul>
                             </div>
                         </div>
@@ -104,7 +86,7 @@ include "config/db.php";
             <div class="container h-100">
                 <div class="row h-100 align-items-center">
                     <div class="col-12">
-                        <a href="home.php" class="original-logo"><img src="img/core-img/2.png" alt=""></a>
+                        <a href="index.html" class="original-logo"><img src="img/core-img/2.png" alt=""></a>
                     </div>
                 </div>
             </div>
@@ -136,7 +118,7 @@ include "config/db.php";
 
                             <!-- Nav Start -->
                             <div class="classynav">
-                                <ul>
+                                                                <ul>
                                     <li><a href="home.php">Home</a></li>
                                     <li><a href="#">Pages</a>
                                         <ul class="dropdown">
@@ -171,107 +153,21 @@ include "config/db.php";
     </header>
     <!-- ##### Header Area End ##### -->
 
-    <!-- ##### Hero Area Start ##### -->
-    <div class="hero-area">
-        <!-- Hero Slides Area -->
-        <div class="hero-slides owl-carousel">
-            <!-- Single Slide -->
-            <div class="single-hero-slide bg-img" style="background-image: url(img/protrack/4.jpg);">
-                <div class="container h-100">
-                    <div class="row h-100 align-items-center">
-                        <div class="col-12">
-                            <div class="slide-content text-center">
-                                <div class="post-tag">
-                                    <a href="#" data-animation="fadeInUp">ProTrack</a>
-                                </div>
-                                <h2 data-animation="fadeInUp" data-delay="250ms"><a href="single-post.php">Plan • Track • Complete</a></h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <div class="single-hero-slide bg-img" style="background-image: url(img/protrack/1.jpg);">
-                <div class="container h-100">
-                    <div class="row h-100 align-items-center">
-                        <div class="col-12">
-                            <div class="slide-content text-center">
-                                <div class="post-tag">
-                                    <a href="#" data-animation="fadeInUp">ProTrack</a>
-                                </div>
-                                <h2 data-animation="fadeInUp" data-delay="250ms"><a href="single-post.php">Track progress, manage tasks, and collaborate with your team efficiently in one powerful platform.</a></h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Single Slide -->
-            <div class="single-hero-slide bg-img" style="background-image: url(img/protrack/2.jpg);">
-                <div class="container h-100">
-                    <div class="row h-100 align-items-center">
-                        <div class="col-12">
-                            <div class="slide-content text-center">
-                                <div class="post-tag">
-                                    <a href="#" data-animation="fadeInUp">ProTrack</a>
-                                </div>
-                                <h2 data-animation="fadeInUp" data-delay="250ms"><a href="single-post.php">Monitor deadlines, manage tasks, and keep your projects organized with ease.</a></h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-            <!-- Single Slide -->
-            <div class="single-hero-slide bg-img" style="background-image: url(img/protrack/3.jpg);">
-                <div class="container h-100">
-                    <div class="row h-100 align-items-center">
-                        <div class="col-12">
-                            <div class="slide-content text-center">
-                                <div class="post-tag">
-                                    <a href="#" data-animation="fadeInUp">ProTrack</a>
-                                </div>
-                                <h2 data-animation="fadeInUp" data-delay="250ms"><a href="single-post.php">Simplify project management and improve productivity with a clear and structured system.</a></h2>
-                            </div>
-                        </div>
-                    </div>
-                </div>
-            </div>
-        </div>
-    </div>
-    <!-- ##### Hero Area End ##### -->
+    <!-- ##### Single Blog Area Start ##### -->
+    <div class="single-blog-wrapper section-padding-0-100">
 
-    <!-- ##### Blog Wrapper Start ##### -->
-    <div class="blog-wrapper section-padding-100 clearfix">
-        <div class="container">
-            <div class="row align-items-end">
-                <!-- Single Blog Area -->
-                <div class="col-12 col-lg-4">
-                    <div class="single-blog-area clearfix mb-100">
-                        <!-- Blog Content -->
-                        <div class="single-blog-content">
-                            <div class="line"></div>
-                            <a href="#" class="post-tag">ProTrack</a>
-                            <h4><a href="#" class="post-headline">Welcome to ProTrack</a></h4>
-                            <p>ProTrack is a modern project management platform that helps teams organize tasks, track project progress, and collaborate more efficiently. With a simple and intuitive interface, users can monitor every stage of their projects and keep all important information in one place.</p>
-                            <a href="#" class="btn original-btn">Read More</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Single Blog Area -->
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="single-catagory-area clearfix mb-100">
-                        <img src="img/protrack/5.jpg" alt="">
-                        <!-- Catagory Title -->
-                        <div class="catagory-title">
-                            <a href="#">ProTrack</a>
-                        </div>
-                    </div>
-                </div>
-                <!-- Single Blog Area -->
-                <div class="col-12 col-md-6 col-lg-4">
-                    <div class="single-catagory-area clearfix mb-100">
-                        <img src="img/protrack/6.jpg" alt="">
-                        <!-- Catagory Title -->
-                        <div class="catagory-title">
-                            <a href="#">latest posts</a>
+        <!-- Single Blog Area  -->
+        <div class="single-blog-area blog-style-2 mb-50">
+            <div class="single-blog-thumbnail">
+                <img src="img/protrack/22.jpg" alt="">
+                <div class="post-tag-content">
+                    <div class="container">
+                        <div class="row">
+                            <div class="col-12">
+                                <div class="post-date">
+                                    <a href="#">12 <span>march</span></a>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -280,146 +176,146 @@ include "config/db.php";
 
         <div class="container">
             <div class="row">
+                <!-- ##### Post Content Area ##### -->
                 <div class="col-12 col-lg-9">
-
                     <!-- Single Blog Area  -->
-                    <div class="single-blog-area blog-style-2 mb-50 wow fadeInUp" data-wow-delay="0.2s" data-wow-duration="1000ms">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-md-6">
-                                <div class="single-blog-thumbnail">
-                                    <img src="img/protrack/7.jpg" alt="">
-                                    <div class="post-date">
-                                        <a href="#">8 <span>march</span></a>
-                                    </div>
-                                </div>
+                    <div class="single-blog-area blog-style-2 mb-50">
+                        <!-- Blog Content -->
+                        <div class="single-blog-content">
+                            <div class="line"></div>
+                            <a href="#" class="post-tag">ProTrack</a>
+                            <h4><a href="#" class="post-headline mb-0">Improving Construction Project Management with Digital Tools</a></h4>
+                            <div class="post-meta mb-50">
+                                <p>By <a href="#">ProTrack</a></p>
+                                <p>3 comments</p>
                             </div>
-                            <div class="col-12 col-md-6">
-                                <!-- Blog Content -->
-                                <div class="single-blog-content">
-                                    <div class="line"></div>
-                                    <a href="#" class="post-tag">ProTrack</a>
-                                    <h4><a href="#" class="post-headline">Building Information Modeling for Architecture</a></h4>
-                                    <p>This paper discusses the application of Building Information Modeling (BIM) in architectural design and construction.</p>
-                                    <div class="post-meta">
-                                        <p>By <a href="#">Matthew N. O. Sadiku</a></p>
-                                        <p>3 comments</p>
-                                    </div>
-                                </div>
-                            </div>
+                            <p>Construction projects often involve multiple teams, complex schedules, and various construction tasks that must be completed in the correct order. Without a clear system to monitor progress, project managers may face delays, miscommunication, and difficulty tracking the status of each construction item. As construction projects grow larger and more complex, having an efficient project tracking system becomes increasingly important.</p>
+
+                            <p>Digital platforms like ProTrack help simplify construction project management by providing a centralized system to monitor project progress and manage work items. Project managers and engineers can easily track timelines, update task status, and review the progress of each construction phase. This allows teams to quickly identify delays, adjust plans when necessary, and ensure that construction activities remain on schedule.</p>
+
+                            <p>Another advantage of using a digital project management system is improved collaboration between team members. When all project information is organized and accessible in one place, engineers, supervisors, and managers can communicate more effectively and make faster decisions. This transparency helps reduce errors and improves coordination across different departments involved in the construction process.</p>
+                            <p>As the construction industry continues to adopt digital transformation, tools like ProTrack are becoming essential for modern project management. By improving visibility, organization, and efficiency, these systems help construction teams complete projects more successfully and maintain better control over timelines, resources, and project outcomes.</p>
                         </div>
                     </div>
 
-                    <!-- Single Blog Area  -->
-                    <div class="single-blog-area blog-style-2 mb-50 wow fadeInUp" data-wow-delay="0.3s" data-wow-duration="1000ms">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-md-6">
-                                <div class="single-blog-thumbnail">
-                                    <img src="img/protrack/8.jpg" alt="">
-                                    <div class="post-date">
-                                        <a href="#">12 <span>march</span></a>
-                                    </div>
-                                </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <!-- Blog Content -->
-                                <div class="single-blog-content">
-                                    <div class="line"></div>
-                                    <a href="#" class="post-tag">ProTrack</a>
-                                    <h4><a href="#" class="post-headline">Supporting Construction and Architectural Visualization through BIM and AR/VR</a></h4>
-                                    <p>This research explores the integration of BIM with Augmented Reality (AR) and Virtual Reality (VR) in architecture and construction.</p>
-                                    <div class="post-meta">
-                                        <p>By <a href="#">Willie</a></p>
-                                        <p>3 comments</p>
-                                    </div>
-                                </div>
-                            </div>
+                    <!-- About Author -->
+                    <div class="blog-post-author mt-100 d-flex">
+                        <div class="author-thumbnail">
+                            <img src="uploads/banner/1772376805_1.jpg" alt="">
+                        </div>
+                        <div class="author-info">
+                            <div class="line"></div>
+                            <span class="author-role">Author</span>
+                            <h4><a href="#" class="author-name">ProTrack</a></h4>
+                            <p>Construction projects require careful planning, coordination, and continuous monitoring to ensure every task is completed on time. ProTrack is designed to support project teams in tracking the progress of construction activities and managing individual work items efficiently. By organizing project data and providing clear progress updates, the platform helps managers maintain better control over construction schedules and project performance.
+
+With a simple and user-friendly interface, ProTrack allows engineers, supervisors, and project managers to easily monitor each construction stage and identify potential delays early. The system improves collaboration between team members while ensuring that all project information is accessible and well organized. ProTrack helps construction teams work more efficiently and complete projects with greater accuracy and transparency.</p>
                         </div>
                     </div>
 
-                    <!-- Single Blog Area  -->
-                    <div class="single-blog-area blog-style-2 mb-50 wow fadeInUp" data-wow-delay="0.4s" data-wow-duration="1000ms">
-                        <div class="row">
-                            <div class="col-12">
-                                <div class="single-blog-thumbnail">
-                                    <img src="img/protrack/9.jpg" alt="">
-                                    <div class="post-date">
-                                        <a href="#">10 <span>march</span></a>
+                    <!-- Comment Area Start -->
+                    <div class="comment_area clearfix mt-70">
+                        <h5 class="title">Comments</h5>
+
+                        <ol>
+                            <!-- Single Comment Area -->
+                            <li class="single_comment_area">
+                                <!-- Comment Content -->
+                                <div class="comment-content d-flex">
+                                    <!-- Comment Author -->
+                                    <div class="comment-author">
+                                        <img src="img/bg-img/b7.jpg" alt="author">
+                                    </div>
+                                    <!-- Comment Meta -->
+                                    <div class="comment-meta">
+                                        <a href="#" class="post-date">March 12</a>
+                                        <p><a href="#" class="post-author">William James</a></p>
+                                        <p>Efficitur lorem sed tempor. Integer aliquet tempor cursus. Nullam vestibulum convallis risus vel condimentum. Nullam auctor lorem in libero luctus, vel volutpat quam tincidunt.</p>
+                                        <a href="#" class="comment-reply">Reply</a>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-12">
-                                <!-- Blog Content -->
-                                <div class="single-blog-content mt-50">
-                                    <div class="line"></div>
-                                    <a href="#" class="post-tag">ProTrack</a>
-                                    <h4><a href="#" class="post-headline">Computer Vision-Based Analysis of Buildings and Built Environments</a></h4>
-                                    <p>This study reviews the use of computer vision techniques in architectural research. Applications include.</p>
-                                    <div class="post-meta">
-                                        <p>By <a href="#">Tony</a></p>
-                                        <p>3 comments</p>
+                                <ol class="children">
+                                    <li class="single_comment_area">
+                                        <!-- Comment Content -->
+                                        <div class="comment-content d-flex">
+                                            <!-- Comment Author -->
+                                            <div class="comment-author">
+                                                <img src="img/bg-img/b7.jpg" alt="author">
+                                            </div>
+                                            <!-- Comment Meta -->
+                                            <div class="comment-meta">
+                                                <a href="#" class="post-date">March 12</a>
+                                                <p><a href="#" class="post-author">William James</a></p>
+                                                <p>Efficitur lorem sed tempor. Integer aliquet tempor cursus. Nullam vestibulum convallis risus vel condimentum. Nullam auctor lorem in libero luctus, vel volutpat quam tincidunt.</p>
+                                                <a href="#" class="comment-reply">Reply</a>
+                                            </div>
+                                        </div>
+                                    </li>
+                                </ol>
+                            </li>
+
+                            <!-- Single Comment Area -->
+                            <li class="single_comment_area">
+                                <!-- Comment Content -->
+                                <div class="comment-content d-flex">
+                                    <!-- Comment Author -->
+                                    <div class="comment-author">
+                                        <img src="img/bg-img/b7.jpg" alt="author">
+                                    </div>
+                                    <!-- Comment Meta -->
+                                    <div class="comment-meta">
+                                        <a href="#" class="post-date">March 12</a>
+                                        <p><a href="#" class="post-author">William James</a></p>
+                                        <p>Efficitur lorem sed tempor. Integer aliquet tempor cursus. Nullam vestibulum convallis risus vel condimentum. Nullam auctor lorem in libero luctus, vel volutpat quam tincidunt.</p>
+                                        <a href="#" class="comment-reply">Reply</a>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
+                            </li>
+                        </ol>
                     </div>
 
-                    <!-- Single Blog Area  -->
-                    <div class="single-blog-area blog-style-2 mb-50 wow fadeInUp" data-wow-delay="0.5s" data-wow-duration="1000ms">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-md-6">
-                                <div class="single-blog-thumbnail">
-                                    <img src="img/protrack/10.jpg" alt="">
-                                    <div class="post-date">
-                                        <a href="#">12 <span>march</span></a>
+                    <div class="post-a-comment-area mt-70">
+                        <h5>Leave a reply</h5>
+                        <!-- Reply Form -->
+                        <form action="#" method="post">
+                            <div class="row">
+                                <div class="col-12 col-md-6">
+                                    <div class="group">
+                                        <input type="text" name="name" id="name" required>
+                                        <span class="highlight"></span>
+                                        <span class="bar"></span>
+                                        <label>Name</label>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <!-- Blog Content -->
-                                <div class="single-blog-content">
-                                    <div class="line"></div>
-                                    <a href="#" class="post-tag">ProTrack</a>
-                                    <h4><a href="#" class="post-headline">Generative Design in Architecture Using Artificial Intelligence</a></h4>
-                                    <p>The paper examines how Artificial Intelligence and generative design algorithms assist architects in creating building layouts and design alternatives.</p>
-                                    <div class="post-meta">
-                                        <p>By <a href="#">Smith</a></p>
-                                        <p>3 comments</p>
+                                <div class="col-12 col-md-6">
+                                    <div class="group">
+                                        <input type="email" name="email" id="email" required>
+                                        <span class="highlight"></span>
+                                        <span class="bar"></span>
+                                        <label>Email</label>
                                     </div>
                                 </div>
-                            </div>
-                        </div>
-                    </div>
-
-                    <!-- Single Blog Area  -->
-                    <div class="single-blog-area blog-style-2 mb-50 wow fadeInUp" data-wow-delay="0.6s" data-wow-duration="1000ms">
-                        <div class="row align-items-center">
-                            <div class="col-12 col-md-6">
-                                <div class="single-blog-thumbnail">
-                                    <img src="img/protrack/11.jpg" alt="">
-                                    <div class="post-date">
-                                        <a href="#">12 <span>march</span></a>
+                                <div class="col-12">
+                                    <div class="group">
+                                        <input type="text" name="subject" id="subject" required>
+                                        <span class="highlight"></span>
+                                        <span class="bar"></span>
+                                        <label>Subject</label>
                                     </div>
                                 </div>
-                            </div>
-                            <div class="col-12 col-md-6">
-                                <!-- Blog Content -->
-                                <div class="single-blog-content">
-                                    <div class="line"></div>
-                                    <a href="#" class="post-tag">ProTrack</a>
-                                    <h4><a href="#" class="post-headline">Sustainable Architecture and Building Design</a></h4>
-                                    <p>This research focuses on sustainable architectural design principles, including.</p>
-                                    <div class="post-meta">
-                                        <p>By <a href="#">Sam</a></p>
-                                        <p>3 comments</p>
+                                <div class="col-12">
+                                    <div class="group">
+                                        <textarea name="message" id="message" required></textarea>
+                                        <span class="highlight"></span>
+                                        <span class="bar"></span>
+                                        <label>Comment</label>
                                     </div>
                                 </div>
+                                <div class="col-12">
+                                    <button type="submit" class="btn original-btn">Reply</button>
+                                </div>
                             </div>
-                        </div>
-                    </div>
-
-                    <!-- Load More -->
-                    <div class="load-more-btn mt-100 wow fadeInUp" data-wow-delay="0.7s" data-wow-duration="1000ms">
-                        <a href="#" class="btn original-btn">Read More</a>
+                        </form>
                     </div>
                 </div>
 
@@ -449,7 +345,7 @@ include "config/db.php";
                         <!-- Widget Area -->
                         <div class="sidebar-widget-area">
                             <h5 class="title">Advertisement</h5>
-                            <a href="#"><img src="img/bg-img/arch.gif" alt=""></a>
+                            <a href="#"><img src="img/bg-img/add.gif" alt=""></a>
                         </div>
 
                         <!-- Widget Area -->
@@ -528,7 +424,7 @@ include "config/db.php";
                         <div class="sidebar-widget-area">
                             <h5 class="title">Tags</h5>
                             <div class="widget-content">
-                            <ul class="tags">
+                                <ul class="tags">
                                 <li><a href="#">architecture</a></li>
                                 <li><a href="#">design</a></li>
                                 <li><a href="#">build</a></li>
@@ -539,6 +435,7 @@ include "config/db.php";
                                 <li><a href="#">material</a></li>
                                 <li><a href="#">project</a></li>
                             </ul>
+                                </ul>
                             </div>
                         </div>
                     </div>
@@ -546,7 +443,7 @@ include "config/db.php";
             </div>
         </div>
     </div>
-    <!-- ##### Blog Wrapper End ##### -->
+    <!-- ##### Single Blog Area End ##### -->
 
     <!-- ##### Instagram Feed Area Start ##### -->
     <div class="instagram-feed-area">
@@ -626,7 +523,6 @@ include "config/db.php";
         <div class="container">
             <div class="row">
                 <div class="col-12">
-                   
                     <!-- Footer Nav Area -->
                     <div class="classy-nav-container breakpoint-off">
                         <!-- Classy Menu -->
@@ -660,7 +556,6 @@ include "config/db.php";
                             </div>
                         </nav>
                     </div>
-                    
                     <!-- Footer Social Area -->
                     <div class="footer-social-area mt-30">
                         <a href="#" data-toggle="tooltip" data-placement="top" title="Pinterest"><i class="fa fa-pinterest" aria-hidden="true"></i></a>
