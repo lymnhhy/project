@@ -1,5 +1,6 @@
 <?php
 // profile/edit.php
+ob_start();
 require_once '../includes/header.php';
 
 $user_id = $_SESSION['id'];

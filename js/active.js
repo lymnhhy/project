@@ -107,7 +107,7 @@
 
     // :: Countdown Active Code
     if ($.fn.countdown) {
-        $('#clock').countdown('2026/03/15', function (event) {
+        $('#clock').countdown('2026/03/16', function (event) {
             $(this).html(event.strftime('<div>%D <span>Days</span></div> <div>%H <span>Hours</span></div> <div>%M <span>Minutes</span></div> <div>%S <span>Seconds</span></div>'));
         });
     }

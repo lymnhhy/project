@@ -126,7 +126,7 @@ $trangthai_result = mysqli_query($conn, "SELECT * FROM trangthaicongtrinh ORDER 
         <div class="d-flex justify-content-between align-items-center">
             <h4 class="mb-0">
                 <i class="fas fa-tags me-2 text-primary"></i>
-                Quản lý danh mục hệ thống
+                Quản lý công trình
             </h4>
         </div>
     </div>

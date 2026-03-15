@@ -1,6 +1,5 @@
 <?php
 // baocao/index.php
-$page_title = 'Báo cáo tổng hợp';
 require_once '../includes/header.php';
 
 $user_id = $_SESSION['id'];

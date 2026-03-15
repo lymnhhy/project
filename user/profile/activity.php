@@ -288,10 +288,47 @@ $stats = mysqli_query($conn, $sql_stats);
 </div>
 
 <script>
+// Đảm bảo dropdown hoạt động
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Activity page loaded successfully');
+    
+    // Kiểm tra Bootstrap có hoạt động không
+    if (typeof bootstrap !== 'undefined') {
+        console.log('Bootstrap loaded');
+    } else {
+        console.log('Bootstrap not loaded');
+    }
+});
+
+// Hàm xuất báo cáo (dự phòng nếu dùng JavaScript)
 function exportActivity() {
-    const params = new URLSearchParams(window.location.search).toString();
-    window.location.href = 'export-activity.php?' + params;
+   // Lấy tham số filter từ URL hiện tại
+    const urlParams = new URLSearchParams(window.location.search);
+    const action = urlParams.get('action') || '';
+    const date = urlParams.get('date') || '';
+    
+    // Tạo URL export
+    let exportUrl = 'export-activity.php?format=excel';
+    if (action) exportUrl += '&action=' + encodeURIComponent(action);
+    if (date) exportUrl += '&date=' + encodeURIComponent(date);
+    
+    // Log để debug
+    console.log('Exporting to Excel with URL:', exportUrl);
+    
+    // Chuyển hướng để tải file
+    window.location.href = exportUrl;
 }
+
+// Kiểm tra khi trang load
+document.addEventListener('DOMContentLoaded', function() {
+    console.log('Activity page loaded - Excel export ready');
+    
+    // Kiểm tra Bootstrap
+    if (typeof bootstrap !== 'undefined') {
+        console.log('Bootstrap loaded');
+    }
+});
+
 </script>
 
 <?php require_once '../includes/footer.php'; ?>

@@ -63,6 +63,22 @@ if (isset($_POST['dangnhap'])) {
         $error = "Sai tài khoản hoặc mật khẩu!";
     }
 }
+$sql_anh = "SELECT * FROM anh 
+            WHERE trang_thai = 1 
+            ORDER BY id DESC 
+            LIMIT 1";
+$result_anh = mysqli_query($conn, $sql_anh);
+$anh_moi_nhat = mysqli_fetch_assoc($result_anh);
+
+// Đường dẫn ảnh mặc định nếu không có ảnh trong database
+$duong_dan_anh = 'img/img_jpg/project.jpg'; // ảnh mặc định
+
+if($anh_moi_nhat && !empty($anh_moi_nhat['hinh_anh'])) {
+    // Nếu có ảnh trong database, sử dụng ảnh đó
+    $duong_dan_anh = $anh_moi_nhat['hinh_anh'];
+}
+
+
 ?>
 
 
@@ -96,7 +112,8 @@ if (isset($_POST['dangnhap'])) {
         </div>
     </div>
 
-    <div class="coming-soon-area bg-img background-overlay" style="background-image: url(img/img_jpg/project.jpg);">
+<div class="coming-soon-area bg-img background-overlay" 
+     style="background-image: url('<?php echo $duong_dan_anh; ?>');">
         <!-- ##### Header Area Start ##### -->
         <header class="header-area">
 
@@ -138,7 +155,7 @@ if (isset($_POST['dangnhap'])) {
                 <div class="container h-100">
                     <div class="row h-100 align-items-center">
                         <div class="col-12">
-                            <a href="index.html" class="original-logo"><img src="img/core-img/1.png" alt=""></a>
+                            <a href="home.php" class="original-logo"><img src="img/core-img/1.png" alt=""></a>
                         </div>
                     </div>
                 </div>

@@ -138,7 +138,7 @@ if (isset($_POST['dangnhap'])) {
                 <div class="container h-100">
                     <div class="row h-100 align-items-center">
                         <div class="col-12">
-                            <a href="index.html" class="original-logo"><img src="img/core-img/1.png" alt=""></a>
+                            <a href="home.php" class="original-logo"><img src="img/core-img/1.png" alt=""></a>
                         </div>
                     </div>
                 </div>

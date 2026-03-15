@@ -1,6 +1,6 @@
 <?php
 // baocao/history.php
-$page_title = 'Lịch sử báo cáo';
+
 require_once '../includes/header.php';
 
 $user_id = $_SESSION['id'];

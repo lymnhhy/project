@@ -165,7 +165,7 @@ $result = mysqli_query($conn, $sql);
         <div class="d-flex justify-content-between align-items-center">
             <h4 class="mb-0">
                 <i class="fas fa-users me-2 text-primary"></i>
-                Quản lý người dùng
+                Quản lý tài khoản người dùng
             </h4>
             <a href="?action=add" class="btn btn-primary">
                 <i class="fas fa-plus-circle me-2"></i>Thêm người dùng

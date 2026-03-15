@@ -2,44 +2,83 @@
 // profile/password.php
 require_once '../includes/header.php';
 
+// Kiểm tra đăng nhập
+if (!isset($_SESSION['id'])) {
+    header('Location: ' . BASE_URL . '../auth/dangnhap.php');
+    exit();
+}
+
 $user_id = $_SESSION['id'];
 $error = '';
 $success = '';
 
+// Kiểm tra hàm logActivity có tồn tại không
+if (!function_exists('logActivity')) {
+    function logActivity($conn, $user_id, $action, $detail) {
+        $ip = $_SERVER['REMOTE_ADDR'] ?? '0.0.0.0';
+        $sql = "INSERT INTO lichsuhoatdong (user_id, hanh_dong, chi_tiet, ip_address, thoi_gian) 
+                VALUES ('$user_id', '$action', '$detail', '$ip', NOW())";
+        return mysqli_query($conn, $sql);
+    }
+}
+
 if($_SERVER['REQUEST_METHOD'] == 'POST') {
-    $current_pass = $_POST['current_password'];
-    $new_pass = $_POST['new_password'];
-    $confirm_pass = $_POST['confirm_password'];
+    $current_pass = $_POST['current_password'] ?? '';
+    $new_pass = $_POST['new_password'] ?? '';
+    $confirm_pass = $_POST['confirm_password'] ?? '';
     
     // Lấy mật khẩu hiện tại
     $sql = "SELECT password FROM users WHERE id = '$user_id'";
     $result = mysqli_query($conn, $sql);
-    $user = mysqli_fetch_assoc($result);
     
-    // Validate
-    if(empty($current_pass)) {
-        $error = 'Vui lòng nhập mật khẩu hiện tại';
-    } elseif(md5($current_pass) != $user['password']) {
-        $error = 'Mật khẩu hiện tại không đúng';
-    } elseif(empty($new_pass)) {
-        $error = 'Vui lòng nhập mật khẩu mới';
-    } elseif(strlen($new_pass) < 6) {
-        $error = 'Mật khẩu mới phải có ít nhất 6 ký tự';
-    } elseif($new_pass != $confirm_pass) {
-        $error = 'Mật khẩu xác nhận không khớp';
+    if (!$result) {
+        $error = 'Lỗi truy vấn: ' . mysqli_error($conn);
     } else {
-        $new_pass_md5 = md5($new_pass);
-        $sql_update = "UPDATE users SET password = '$new_pass_md5' WHERE id = '$user_id'";
+        $user = mysqli_fetch_assoc($result);
         
-        if(mysqli_query($conn, $sql_update)) {
-            logActivity($conn, $user_id, 'Đổi mật khẩu', 'Thay đổi mật khẩu tài khoản');
-            $_SESSION['success'] = 'Đổi mật khẩu thành công!';
-            header('Location: index.php');
-            exit();
+        // Validate
+        if(empty($current_pass)) {
+            $error = 'Vui lòng nhập mật khẩu hiện tại';
+        } elseif(md5($current_pass) != $user['password']) {
+            $error = 'Mật khẩu hiện tại không đúng';
+        } elseif(empty($new_pass)) {
+            $error = 'Vui lòng nhập mật khẩu mới';
+        } elseif(strlen($new_pass) < 6) {
+            $error = 'Mật khẩu mới phải có ít nhất 6 ký tự';
+        } elseif($new_pass != $confirm_pass) {
+            $error = 'Mật khẩu xác nhận không khớp';
         } else {
-            $error = 'Lỗi: ' . mysqli_error($conn);
+            // NÊN DÙNG password_hash thay vì md5
+            $new_pass_md5 = md5($new_pass); // Tạm thời giữ md5 cho tương thích
+            
+            $sql_update = "UPDATE users SET password = '$new_pass_md5' WHERE id = '$user_id'";
+            
+            if(mysqli_query($conn, $sql_update)) {
+                // Ghi log hoạt động
+                logActivity($conn, $user_id, 'Đổi mật khẩu', 'Thay đổi mật khẩu tài khoản');
+                
+                // Set session success
+                $_SESSION['success'] = 'Đổi mật khẩu thành công!';
+                
+                // Chuyển hướng an toàn
+                if (!headers_sent()) {
+                    header('Location: password.php');
+                    exit();
+                } else {
+                    echo "<script>window.location.href='password.php';</script>";
+                    exit();
+                }
+            } else {
+                $error = 'Lỗi cập nhật: ' . mysqli_error($conn);
+            }
         }
     }
+}
+
+// Lấy thông báo success từ session nếu có
+if (isset($_SESSION['success'])) {
+    $success = $_SESSION['success'];
+    unset($_SESSION['success']);
 }
 ?>
 
@@ -63,7 +102,14 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
     <?php if($error): ?>
     <div class="alert alert-danger alert-dismissible fade show" role="alert">
-        <i class="fas fa-exclamation-circle me-2"></i><?php echo $error; ?>
+        <i class="fas fa-exclamation-circle me-2"></i><?php echo htmlspecialchars($error); ?>
+        <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
+    </div>
+    <?php endif; ?>
+
+    <?php if($success): ?>
+    <div class="alert alert-success alert-dismissible fade show" role="alert">
+        <i class="fas fa-check-circle me-2"></i><?php echo htmlspecialchars($success); ?>
         <button type="button" class="btn-close" data-bs-dismiss="alert"></button>
     </div>
     <?php endif; ?>
@@ -76,7 +122,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                     Form đổi mật khẩu
                 </div>
                 <div class="card-body">
-                    <form method="POST" id="changePasswordForm">
+                    <form method="POST" id="changePasswordForm" onsubmit="return validateForm()">
                         <!-- Mật khẩu hiện tại -->
                         <div class="mb-4">
                             <label class="form-label">
@@ -86,10 +132,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-key"></i></span>
                                 <input type="password" name="current_password" 
+                                       id="current_password"
                                        class="form-control" 
                                        placeholder="Nhập mật khẩu hiện tại"
                                        required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('current_password', this)">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
@@ -104,10 +151,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-key"></i></span>
                                 <input type="password" name="new_password" 
+                                       id="new_password"
                                        class="form-control" 
                                        placeholder="Nhập mật khẩu mới (ít nhất 6 ký tự)"
                                        required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('new_password', this)">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
@@ -128,10 +176,11 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <div class="input-group">
                                 <span class="input-group-text"><i class="fas fa-key"></i></span>
                                 <input type="password" name="confirm_password" 
+                                       id="confirm_password"
                                        class="form-control" 
                                        placeholder="Nhập lại mật khẩu mới"
                                        required>
-                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword(this)">
+                                <button class="btn btn-outline-secondary" type="button" onclick="togglePassword('confirm_password', this)">
                                     <i class="fas fa-eye"></i>
                                 </button>
                             </div>
@@ -143,7 +192,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                         <!-- Yêu cầu mật khẩu -->
                         <div class="alert alert-info">
                             <h6 class="alert-heading"><i class="fas fa-info-circle me-2"></i>Yêu cầu mật khẩu:</h6>
-                            <ul class="mb-0 small">
+                            <ul class="mb-0 small" id="passwordRequirements">
                                 <li id="req-length">✓ Ít nhất 6 ký tự</li>
                                 <li id="req-number">✓ Ít nhất 1 chữ số</li>
                                 <li id="req-uppercase">✓ Ít nhất 1 chữ hoa</li>
@@ -156,7 +205,7 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
                             <button type="submit" class="btn btn-primary px-5">
                                 <i class="fas fa-save me-2"></i>Cập nhật mật khẩu
                             </button>
-                            <button type="reset" class="btn btn-secondary px-5">
+                            <button type="reset" class="btn btn-secondary px-5" onclick="resetForm()">
                                 <i class="fas fa-undo me-2"></i>Reset
                             </button>
                         </div>
@@ -169,8 +218,8 @@ if($_SERVER['REQUEST_METHOD'] == 'POST') {
 
 <script>
 // Toggle hiển thị mật khẩu
-function togglePassword(btn) {
-    const input = btn.previousElementSibling;
+function togglePassword(inputId, btn) {
+    const input = document.getElementById(inputId);
     const icon = btn.querySelector('i');
     
     if(input.type === 'password') {
@@ -185,7 +234,7 @@ function togglePassword(btn) {
 }
 
 // Kiểm tra độ mạnh mật khẩu
-document.querySelector('input[name="new_password"]').addEventListener('input', function() {
+document.getElementById('new_password').addEventListener('input', function() {
     const password = this.value;
     const strengthBar = document.getElementById('passwordStrength');
     const strengthText = document.getElementById('strengthText');
@@ -230,12 +279,17 @@ document.querySelector('input[name="new_password"]').addEventListener('input', f
     document.getElementById('req-lowercase').innerHTML = /[a-z]/.test(password) ? 
         '<span class="text-success">✓ Ít nhất 1 chữ thường</span>' : 
         '<span class="text-danger">✗ Ít nhất 1 chữ thường</span>';
+    
+    // Kiểm tra mật khẩu khớp
+    checkPasswordMatch();
 });
 
 // Kiểm tra mật khẩu khớp
-document.querySelector('input[name="confirm_password"]').addEventListener('input', function() {
-    const newPass = document.querySelector('input[name="new_password"]').value;
-    const confirmPass = this.value;
+document.getElementById('confirm_password').addEventListener('input', checkPasswordMatch);
+
+function checkPasswordMatch() {
+    const newPass = document.getElementById('new_password').value;
+    const confirmPass = document.getElementById('confirm_password').value;
     const matchMessage = document.getElementById('matchMessage');
     
     if(confirmPass === '') {
@@ -245,18 +299,45 @@ document.querySelector('input[name="confirm_password"]').addEventListener('input
     } else {
         matchMessage.innerHTML = '<span class="text-danger"><i class="fas fa-exclamation-circle"></i> Mật khẩu không khớp</span>';
     }
-});
+}
 
 // Validate form trước khi submit
-document.getElementById('changePasswordForm').addEventListener('submit', function(e) {
-    const newPass = document.querySelector('input[name="new_password"]').value;
-    const confirmPass = document.querySelector('input[name="confirm_password"]').value;
+function validateForm() {
+    const newPass = document.getElementById('new_password').value;
+    const confirmPass = document.getElementById('confirm_password').value;
+    const currentPass = document.getElementById('current_password').value;
+    
+    if(!currentPass) {
+        alert('Vui lòng nhập mật khẩu hiện tại!');
+        return false;
+    }
+    
+    if(newPass.length < 6) {
+        alert('Mật khẩu mới phải có ít nhất 6 ký tự!');
+        return false;
+    }
     
     if(newPass !== confirmPass) {
-        e.preventDefault();
         alert('Mật khẩu xác nhận không khớp!');
+        return false;
     }
-});
+    
+    return true;
+}
+
+// Reset form
+function resetForm() {
+    document.getElementById('changePasswordForm').reset();
+    document.getElementById('passwordStrength').style.width = '0%';
+    document.getElementById('strengthText').textContent = '';
+    document.getElementById('matchMessage').innerHTML = '';
+    
+    // Reset requirements
+    document.getElementById('req-length').innerHTML = '✓ Ít nhất 6 ký tự';
+    document.getElementById('req-number').innerHTML = '✓ Ít nhất 1 chữ số';
+    document.getElementById('req-uppercase').innerHTML = '✓ Ít nhất 1 chữ hoa';
+    document.getElementById('req-lowercase').innerHTML = '✓ Ít nhất 1 chữ thường';
+}
 </script>
 
 <?php require_once '../includes/footer.php'; ?>
